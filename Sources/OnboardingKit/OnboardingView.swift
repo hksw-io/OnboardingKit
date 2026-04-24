@@ -12,30 +12,15 @@ public struct OnboardingView<Content: OnboardingContent>: View {
     @State private var featuresVisible = false
     @State private var fadeOpacity: Double = 1
 
-    private let featureBaseDelay = 0.3
-    private let featureStaggerDelay = 0.15
-    private let contentMaxWidth: CGFloat = 560
-
-    #if os(macOS)
-        @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 64
-        @ScaledMetric(relativeTo: .body) private var featureIconSize: CGFloat = 24
-        @ScaledMetric(relativeTo: .body) private var contentSpacing: CGFloat = 24
-        @ScaledMetric(relativeTo: .body) private var featureSpacing: CGFloat = 20
-        @ScaledMetric(relativeTo: .body) private var topPadding: CGFloat = 32
-        @ScaledMetric(relativeTo: .body) private var bottomPadding: CGFloat = 20
-        @ScaledMetric(relativeTo: .body) private var gradientMaskHeight: CGFloat = 60
-    #else
-        @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 100
-        @ScaledMetric(relativeTo: .body) private var featureIconSize: CGFloat = 35
-        @ScaledMetric(relativeTo: .body) private var contentSpacing: CGFloat = 38
-        @ScaledMetric(relativeTo: .body) private var featureSpacing: CGFloat = 32
-        @ScaledMetric(relativeTo: .body) private var topPadding: CGFloat = 32
-        @ScaledMetric(relativeTo: .body) private var bottomPadding: CGFloat = 24
-        @ScaledMetric(relativeTo: .body) private var gradientMaskHeight: CGFloat = 80
-    #endif
-
-    @ScaledMetric(relativeTo: .body) private var compactHorizontalPadding: CGFloat = 16
-    @ScaledMetric(relativeTo: .body) private var regularHorizontalPadding: CGFloat = 24
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = Tokens.Platform.iconSize
+    @ScaledMetric(relativeTo: .body) private var featureIconSize: CGFloat = Tokens.Platform.featureIconSize
+    @ScaledMetric(relativeTo: .body) private var contentSpacing: CGFloat = Tokens.Platform.contentSpacing
+    @ScaledMetric(relativeTo: .body) private var featureSpacing: CGFloat = Tokens.Platform.featureSpacing
+    @ScaledMetric(relativeTo: .body) private var topPadding: CGFloat = Tokens.Platform.topPadding
+    @ScaledMetric(relativeTo: .body) private var bottomPadding: CGFloat = Tokens.Platform.bottomPadding
+    @ScaledMetric(relativeTo: .body) private var gradientMaskHeight: CGFloat = Tokens.Platform.scrollEdgeFadeHeight
+    @ScaledMetric(relativeTo: .body) private var compactHorizontalPadding: CGFloat = Tokens.Layout.compactHorizontalPadding
+    @ScaledMetric(relativeTo: .body) private var regularHorizontalPadding: CGFloat = Tokens.Layout.regularHorizontalPadding
 
     public init(
         content: Content,
@@ -58,7 +43,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                     self.headerSection
                     self.featuresSection
                 }
-                .frame(maxWidth: self.contentMaxWidth)
+                .frame(maxWidth: Tokens.Layout.contentMaxWidth)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, self.horizontalPadding(for: geometry.size.width))
                 .padding(.top, self.topPadding)
@@ -76,7 +61,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 ZStack {
                     self.footerSection
-                        .frame(maxWidth: self.contentMaxWidth)
+                        .frame(maxWidth: Tokens.Layout.contentMaxWidth)
                         .padding(.horizontal, self.horizontalPadding(for: geometry.size.width))
                 }
                 .frame(maxWidth: .infinity)
@@ -122,7 +107,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
     }
 
     private func horizontalPadding(for width: CGFloat) -> CGFloat {
-        width < 390 ? self.compactHorizontalPadding : self.regularHorizontalPadding
+        width < Tokens.Layout.compactWidthBreakpoint ? self.compactHorizontalPadding : self.regularHorizontalPadding
     }
 
     private var errorPresented: Binding<Bool> {
@@ -142,7 +127,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                     .antialiased(true)
                     .aspectRatio(contentMode: .fit)
                     .frame(width: self.iconSize, height: self.iconSize)
-                    .clipShape(RoundedRectangle(cornerRadius: self.iconSize * 0.22))
+                    .clipShape(RoundedRectangle(cornerRadius: self.iconSize * Tokens.Radius.iconScale))
                     .accessibilityHidden(true)
             }
 
@@ -176,7 +161,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
     }
 
     private func featureRow(feature: OnboardingFeatureItem, index: Int) -> some View {
-        let delay = self.featureBaseDelay + (Double(index) * self.featureStaggerDelay)
+        let delay = Tokens.Motion.featureBaseDelay + (Double(index) * Tokens.Motion.featureStaggerDelay)
         let isVisible = self.featuresVisible
 
         return HStack(alignment: .top, spacing: Tokens.Spacing.large) {
@@ -209,9 +194,9 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         }
         .accessibilityElement(children: .combine)
         .opacity(isVisible ? 1 : 0)
-        .offset(y: isVisible ? 0 : (self.reduceMotion ? 0 : 30))
+        .offset(y: isVisible ? 0 : (self.reduceMotion ? 0 : Tokens.Motion.revealOffset))
         .animation(
-            self.reduceMotion ? nil : .easeOut(duration: 0.4).delay(delay),
+            self.reduceMotion ? nil : .easeOut(duration: Tokens.Motion.revealDuration).delay(delay),
             value: isVisible)
     }
 
