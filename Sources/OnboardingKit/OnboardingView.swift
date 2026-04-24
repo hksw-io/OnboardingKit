@@ -10,7 +10,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var featuresVisible = false
-    @State private var fadeOpacity: Double = 1
+    @State private var scrollEdgeFadeOpacity: Double = 1
 
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = Tokens.Platform.iconSize
     @ScaledMetric(relativeTo: .body) private var featureIconSize: CGFloat = Tokens.Platform.featureIconSize
@@ -18,7 +18,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
     @ScaledMetric(relativeTo: .body) private var featureSpacing: CGFloat = Tokens.Platform.featureSpacing
     @ScaledMetric(relativeTo: .body) private var topPadding: CGFloat = Tokens.Platform.topPadding
     @ScaledMetric(relativeTo: .body) private var bottomPadding: CGFloat = Tokens.Platform.bottomPadding
-    @ScaledMetric(relativeTo: .body) private var gradientMaskHeight: CGFloat = Tokens.Platform.scrollEdgeFadeHeight
+    @ScaledMetric(relativeTo: .body) private var scrollEdgeFadeHeight: CGFloat = Tokens.Platform.scrollEdgeFadeHeight
     @ScaledMetric(relativeTo: .body) private var compactHorizontalPadding: CGFloat = Tokens.Layout.compactHorizontalPadding
     @ScaledMetric(relativeTo: .body) private var regularHorizontalPadding: CGFloat = Tokens.Layout.regularHorizontalPadding
 
@@ -54,9 +54,9 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                 guard geometry.contentSize.height > 0 else { return 1 }
                 let contentBottom = geometry.contentSize.height + geometry.contentInsets.bottom
                 let distance = contentBottom - geometry.visibleRect.maxY
-                return min(1, max(0, distance / self.gradientMaskHeight))
+                return min(1, max(0, distance / self.scrollEdgeFadeHeight))
             } action: { _, newOpacity in
-                self.fadeOpacity = newOpacity
+                self.scrollEdgeFadeOpacity = newOpacity
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 ZStack {
@@ -73,9 +73,9 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                         ],
                         startPoint: .top,
                         endPoint: .bottom)
-                        .frame(height: self.gradientMaskHeight)
-                        .offset(y: -self.gradientMaskHeight)
-                        .opacity(self.fadeOpacity)
+                        .frame(height: self.scrollEdgeFadeHeight)
+                        .offset(y: -self.scrollEdgeFadeHeight)
+                        .opacity(self.scrollEdgeFadeOpacity)
                         .allowsHitTesting(false)
                 }
                 .background(Tokens.background)
