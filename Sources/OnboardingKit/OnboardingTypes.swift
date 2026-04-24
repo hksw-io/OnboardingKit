@@ -11,6 +11,16 @@ public struct OnboardingFeatureItem: Identifiable {
         self.label = label
         self.description = description
     }
+
+    public init(
+        systemImage: String? = nil,
+        label: LocalizedStringResource? = nil,
+        description: LocalizedStringResource)
+    {
+        self.image = systemImage.map { Image(systemName: $0) }
+        self.label = label.map { Text($0) }
+        self.description = Text(description)
+    }
 }
 
 public protocol OnboardingContent {

@@ -54,6 +54,31 @@ struct OnboardingViewBuildTest {
     }
 
     @Test
+    func viewConstructsWithConvenienceFeatureInitializer() {
+        struct ConvenienceContent: OnboardingContent {
+            var title: Text { Text("Convenience") }
+            var features: [OnboardingFeatureItem] {
+                [
+                    OnboardingFeatureItem(
+                        systemImage: "sparkles",
+                        label: "Localized label",
+                        description: "Localized description."),
+                ]
+            }
+            var primaryButtonText: Text { Text("Go") }
+            var errorAlertTitle: Text { Text("Error") }
+            var errorOKText: Text { Text("OK") }
+        }
+
+        _ = OnboardingView(
+            content: ConvenienceContent(),
+            isLoading: .constant(false),
+            errorMessage: .constant(nil),
+            onPrimary: {},
+            onSkip: {})
+    }
+
+    @Test
     func viewConstructsWithLongLocalizedContentAndManyFeatures() {
         struct LongContent: OnboardingContent {
             var appIcon: Image? { Image(systemName: "app.badge.fill") }

@@ -32,9 +32,9 @@ struct MyOnboarding: OnboardingContent {
     var features: [OnboardingFeatureItem] {
         [
             OnboardingFeatureItem(
-                image: Image(systemName: "hand.tap.fill"),
-                label: Text("Tap to flip"),
-                description: Text("Review cards with a simple tap.")),
+                systemImage: "hand.tap.fill",
+                label: "Tap to flip",
+                description: "Review cards with a simple tap."),
         ]
     }
     var primaryButtonText: Text { Text("Get started") }
