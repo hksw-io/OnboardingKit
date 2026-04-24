@@ -27,6 +27,7 @@ enum Tokens {
         static let featureStaggerDelay: Double = 0.15
         static let revealDuration: Double = 0.4
         static let revealOffset: CGFloat = 30
+        static let routeTransitionDuration: Double = 0.32
     }
 
     enum Platform {
