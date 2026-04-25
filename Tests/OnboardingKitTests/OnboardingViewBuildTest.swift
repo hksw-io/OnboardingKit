@@ -249,6 +249,36 @@ struct OnboardingViewBuildTest {
     }
 
     @Test
+    func viewConstructsWithStandardStyleModifier() {
+        _ = self.styledView()
+            .onboardingStyle(.standard)
+    }
+
+    @Test
+    func viewConstructsWithCustomStyleColors() {
+        let style = OnboardingStyle(
+            tint: .indigo,
+            titleColor: .primary,
+            subtitleColor: .secondary,
+            featureIconColor: .mint,
+            featureTitleColor: .primary,
+            featureDescriptionColor: .secondary,
+            nextStepsTitleColor: .primary,
+            nextStepIconColor: .teal,
+            nextStepTitleColor: .primary,
+            nextStepDescriptionColor: .secondary,
+            nextStepActionColor: .indigo,
+            nextStepAccessoryColor: .secondary,
+            primaryButtonForegroundColor: .white,
+            primaryButtonProgressTint: .white,
+            secondaryButtonColor: .secondary)
+
+        _ = self.styledView()
+            .onboardingBackground(.softGradient)
+            .onboardingStyle(style)
+    }
+
+    @Test
     func animatedMeshPointsAreStableWithReduceMotion() {
         let first = OnboardingAnimatedMeshGeometry.points(phase: 0, reduceMotion: true)
         let second = OnboardingAnimatedMeshGeometry.points(phase: 0.5, reduceMotion: true)
@@ -577,13 +607,17 @@ struct OnboardingViewBuildTest {
     }
 
     private func backgroundView(_ background: OnboardingBackground) -> some View {
+        self.styledView()
+            .onboardingBackground(background)
+    }
+
+    private func styledView() -> OnboardingView<BackgroundContent> {
         OnboardingView(
             content: BackgroundContent(),
             isLoading: .constant(false),
             errorMessage: .constant(nil),
             onPrimary: {},
             onSkip: {})
-            .onboardingBackground(background)
     }
 }
 

@@ -7,6 +7,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
     @Binding var errorMessage: String?
     let allowsInteractiveDismissal: Bool
     private var background: OnboardingBackground = .system
+    private var style: OnboardingStyle = .standard
     let onPrimary: () -> Void
     let onSkip: () -> Void
     let onNextStep: (OnboardingNextStepItem) -> Void
@@ -188,6 +189,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                 }
             }
         }
+        .onboardingTint(self.style.tint)
         .sheet(item: self.$sheetNextStep) { presentedStep in
             NavigationStack {
                 self.nextStepDestination(for: presentedStep.step)
@@ -217,6 +219,12 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         return view
     }
 
+    public func onboardingStyle(_ style: OnboardingStyle) -> Self {
+        var view = self
+        view.style = style
+        return view
+    }
+
     private var onboardingContent: some View {
         ZStack {
             OnboardingBackgroundView(
@@ -230,6 +238,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                     OnboardingPrimaryRouteDestinationContainer(
                         content: self.content,
                         background: self.background,
+                        style: self.style,
                         destination: primaryRouteDestination(activePrimaryRoute.route),
                         index: activePrimaryRoute.index,
                         count: self.content.primaryRoutes.count,
@@ -261,13 +270,15 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                 VStack(spacing: self.contentSpacing) {
                     OnboardingHeaderSection(
                         content: self.content,
-                        iconSize: self.iconSize)
+                        iconSize: self.iconSize,
+                        style: self.style)
                     OnboardingFeatureList(
                         features: self.content.features,
                         featureSpacing: self.featureSpacing,
                         featureIconSize: self.featureIconSize,
                         featuresVisible: self.featuresVisible,
-                        reduceMotion: self.reduceMotion)
+                        reduceMotion: self.reduceMotion,
+                        style: self.style)
                     OnboardingNextStepsSection(
                         title: self.content.nextStepsTitle,
                         steps: self.content.nextSteps,
@@ -277,6 +288,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                         reduceMotion: self.reduceMotion,
                         isLoading: self.isLoading,
                         hasDestination: self.nextStepDestination != nil,
+                        style: self.style,
                         onNextStep: self.selectNextStep)
                 }
                 .frame(maxWidth: Tokens.Layout.contentMaxWidth)
@@ -302,6 +314,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                     OnboardingFooterSection(
                         content: self.content,
                         isLoading: self.isLoading,
+                        style: self.style,
                         onPrimary: self.performPrimaryAction,
                         onSkip: self.onSkip)
                         .frame(maxWidth: Tokens.Layout.contentMaxWidth)
@@ -563,6 +576,7 @@ private struct OnboardingPrimaryDestinationContainer<Destination: View>: View {
 private struct OnboardingPrimaryRouteDestinationContainer<Content: OnboardingContent, Destination: View>: View {
     let content: Content
     let background: OnboardingBackground
+    let style: OnboardingStyle
     let destination: Destination
     let index: Int
     let count: Int
@@ -585,6 +599,7 @@ private struct OnboardingPrimaryRouteDestinationContainer<Content: OnboardingCon
                         .font(.body.weight(.semibold))
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
+                        .onboardingOptionalForegroundStyle(self.style.primaryButtonForegroundColor)
                         .frame(maxWidth: .infinity, minHeight: Tokens.Layout.buttonLabelMinHeight)
                         .padding(.vertical, Tokens.Platform.buttonVerticalPadding)
                 }
@@ -629,6 +644,7 @@ private struct OnboardingPrimaryRouteDestinationContainer<Content: OnboardingCon
 private struct OnboardingHeaderSection<Content: OnboardingContent>: View {
     let content: Content
     let iconSize: CGFloat
+    let style: OnboardingStyle
 
     var body: some View {
         VStack(spacing: Tokens.Spacing.large) {
@@ -650,6 +666,7 @@ private struct OnboardingHeaderSection<Content: OnboardingContent>: View {
                 .font(.largeTitle)
             #endif
                 .fontWeight(.bold)
+                .onboardingOptionalForegroundStyle(self.style.titleColor)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
@@ -657,7 +674,7 @@ private struct OnboardingHeaderSection<Content: OnboardingContent>: View {
             if let subtitle = self.content.subtitle {
                 subtitle
                     .font(.body)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(self.style.subtitleForegroundStyle)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -671,6 +688,7 @@ private struct OnboardingFeatureList: View {
     let featureIconSize: CGFloat
     let featuresVisible: Bool
     let reduceMotion: Bool
+    let style: OnboardingStyle
 
     var body: some View {
         VStack(spacing: self.featureSpacing) {
@@ -680,7 +698,8 @@ private struct OnboardingFeatureList: View {
                     index: index,
                     featureIconSize: self.featureIconSize,
                     featuresVisible: self.featuresVisible,
-                    reduceMotion: self.reduceMotion)
+                    reduceMotion: self.reduceMotion,
+                    style: self.style)
             }
         }
     }
@@ -692,6 +711,7 @@ private struct OnboardingFeatureRow: View {
     let featureIconSize: CGFloat
     let featuresVisible: Bool
     let reduceMotion: Bool
+    let style: OnboardingStyle
 
     var body: some View {
         let delay = Tokens.Motion.revealDelay(for: self.index)
@@ -704,7 +724,7 @@ private struct OnboardingFeatureRow: View {
                     .scaledToFit()
                     .symbolRenderingMode(.hierarchical)
                     .frame(width: self.featureIconSize, height: self.featureIconSize)
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(self.style.featureIconForegroundStyle)
                     .accessibilityHidden(true)
             }
 
@@ -712,11 +732,12 @@ private struct OnboardingFeatureRow: View {
                 if let label = self.feature.label {
                     label
                         .font(.headline)
+                        .onboardingOptionalForegroundStyle(self.style.featureTitleColor)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 self.feature.description
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(self.style.featureDescriptionForegroundStyle)
                     .lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -743,6 +764,7 @@ private struct OnboardingNextStepsSection: View {
     let reduceMotion: Bool
     let isLoading: Bool
     let hasDestination: Bool
+    let style: OnboardingStyle
     let onNextStep: (OnboardingNextStepItem) -> Void
 
     var body: some View {
@@ -751,6 +773,7 @@ private struct OnboardingNextStepsSection: View {
                 if let title = self.title {
                     title
                         .font(.headline)
+                        .onboardingOptionalForegroundStyle(self.style.nextStepsTitleColor)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityAddTraits(.isHeader)
                 }
@@ -765,6 +788,7 @@ private struct OnboardingNextStepsSection: View {
                             reduceMotion: self.reduceMotion,
                             isLoading: self.isLoading,
                             isActionable: self.hasDestination || step.actionText != nil,
+                            style: self.style,
                             onNextStep: self.onNextStep)
                     }
                 }
@@ -783,6 +807,7 @@ private struct OnboardingNextStepRow: View {
     let reduceMotion: Bool
     let isLoading: Bool
     let isActionable: Bool
+    let style: OnboardingStyle
     let onNextStep: (OnboardingNextStepItem) -> Void
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -837,19 +862,20 @@ private struct OnboardingNextStepRow: View {
                     .scaledToFit()
                     .symbolRenderingMode(.hierarchical)
                     .frame(width: self.featureIconSize, height: self.featureIconSize)
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(self.style.nextStepIconForegroundStyle)
                     .accessibilityHidden(true)
             }
 
             VStack(alignment: .leading, spacing: Tokens.Spacing.small) {
                 self.step.title
                     .font(.subheadline.weight(.semibold))
+                    .onboardingOptionalForegroundStyle(self.style.nextStepTitleColor)
                     .fixedSize(horizontal: false, vertical: true)
 
                 if let description = self.step.description {
                     description
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(self.style.nextStepDescriptionForegroundStyle)
                         .lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -863,7 +889,7 @@ private struct OnboardingNextStepRow: View {
                             .font(.footnote.weight(.semibold))
                             .accessibilityHidden(true)
                     }
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(self.style.nextStepActionForegroundStyle)
                     .padding(.top, 2)
                 }
             }
@@ -873,7 +899,7 @@ private struct OnboardingNextStepRow: View {
             if self.isActionable, self.step.actionText == nil {
                 Image(systemName: self.step.presentation == .sheet ? "arrow.up.right.square" : "chevron.right")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(self.style.nextStepAccessoryForegroundStyle)
                     .accessibilityHidden(true)
             }
 
@@ -885,6 +911,7 @@ private struct OnboardingNextStepRow: View {
 private struct OnboardingFooterSection<Content: OnboardingContent>: View {
     let content: Content
     let isLoading: Bool
+    let style: OnboardingStyle
     let onPrimary: () -> Void
     let onSkip: () -> Void
 
@@ -898,17 +925,19 @@ private struct OnboardingFooterSection<Content: OnboardingContent>: View {
                         .font(.body.weight(.semibold))
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
+                        .onboardingOptionalForegroundStyle(self.style.primaryButtonForegroundColor)
                         .opacity(self.isLoading ? 0 : 1)
 
                     HStack(spacing: Tokens.Spacing.small) {
                         ProgressView()
                             .controlSize(.small)
-                            .tint(.white)
+                            .tint(self.style.resolvedPrimaryButtonProgressTint)
 
                         self.content.primaryButtonText
                             .font(.body.weight(.semibold))
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
+                            .onboardingOptionalForegroundStyle(self.style.primaryButtonForegroundColor)
                     }
                     .opacity(self.isLoading ? 1 : 0)
                 }
@@ -939,7 +968,7 @@ private struct OnboardingFooterSection<Content: OnboardingContent>: View {
                         .frame(maxWidth: .infinity, minHeight: Tokens.Layout.minimumControlHeight)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(self.style.secondaryButtonForegroundStyle)
                 .disabled(self.isLoading)
             }
         }
@@ -957,6 +986,26 @@ private struct OnboardingNextStepAccessibilityModifier: ViewModifier {
             content.accessibilityHint(Text(OnboardingAccessibilityText.nextStepHint(for: self.presentation)))
         } else {
             content
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func onboardingTint(_ color: Color?) -> some View {
+        if let color {
+            self.tint(color)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func onboardingOptionalForegroundStyle(_ color: Color?) -> some View {
+        if let color {
+            self.foregroundStyle(color)
+        } else {
+            self
         }
     }
 }

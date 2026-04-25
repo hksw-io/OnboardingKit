@@ -150,6 +150,30 @@ Built-in options:
 
 Destination views can still draw their own backgrounds. If they do, that local destination background appears above the onboarding background.
 
+## Styling
+
+Use `onboardingStyle(_:)` to override foreground, tint, and button colors while keeping the library's layout, typography, and motion:
+
+```swift
+OnboardingView(
+    content: MyOnboarding(),
+    isLoading: $isLoading,
+    errorMessage: $errorMessage,
+    onPrimary: {},
+    onSkip: {})
+    .onboardingBackground(.softGradient)
+    .onboardingStyle(OnboardingStyle(
+        tint: .indigo,
+        titleColor: .primary,
+        featureIconColor: .mint,
+        nextStepActionColor: .indigo,
+        primaryButtonForegroundColor: .white,
+        primaryButtonProgressTint: .white,
+        secondaryButtonColor: .secondary))
+```
+
+`OnboardingBackground` controls the surface behind the sheet content. `OnboardingStyle` controls foreground roles such as title, subtitle, feature rows, next-step rows, primary button text, and secondary button text. Any color you leave as `nil` uses the standard system treatment.
+
 ## State ownership
 
 The view is purely presentational:
