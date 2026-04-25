@@ -150,6 +150,8 @@ Built-in options:
 
 Destination views can still draw their own backgrounds. If they do, that local destination background appears above the onboarding background.
 
+Custom and gradient backgrounds span behind the pinned footer and button area. The default `.system` background keeps the standard opaque footer surface.
+
 ## Styling
 
 Use `onboardingStyle(_:)` to override foreground, tint, and button colors while keeping the library's layout, typography, and motion:

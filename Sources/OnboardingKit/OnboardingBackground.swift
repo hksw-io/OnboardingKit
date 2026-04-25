@@ -58,12 +58,16 @@ extension OnboardingBackground {
         return false
     }
 
+    var spansBehindFooter: Bool {
+        !self.isSystem
+    }
+
     var footerSurfaceStyle: AnyShapeStyle {
-        self.isSystem ? AnyShapeStyle(Tokens.background) : AnyShapeStyle(.regularMaterial)
+        self.spansBehindFooter ? AnyShapeStyle(.clear) : AnyShapeStyle(Tokens.background)
     }
 
     var footerFadeEndColor: Color {
-        self.isSystem ? Tokens.background : Tokens.background.opacity(0.72)
+        self.spansBehindFooter ? .clear : Tokens.background
     }
 
     func makeView(context: OnboardingBackgroundContext) -> AnyView {
