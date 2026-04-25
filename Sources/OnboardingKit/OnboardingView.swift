@@ -190,6 +190,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                         containerHeight: geometry.size.height,
                         footerFrame: self.footerFrame))
             }
+            .scrollIndicators(.hidden)
             .scrollBounceBehavior(.basedOnSize)
             .onScrollGeometryChange(for: Double.self) { geometry in
                 ScrollEdgeFade.opacity(
