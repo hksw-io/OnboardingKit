@@ -432,7 +432,11 @@ public struct OnboardingView<Content: OnboardingContent>: View {
     }
 
     private func horizontalPadding(for width: CGFloat) -> CGFloat {
-        width < Tokens.Layout.compactWidthBreakpoint ? self.compactHorizontalPadding : self.regularHorizontalPadding
+        LayoutMetrics.horizontalPadding(
+            for: width,
+            compact: self.compactHorizontalPadding,
+            regular: self.regularHorizontalPadding,
+            breakpoint: Tokens.Layout.compactWidthBreakpoint)
     }
 
     private var errorPresented: Binding<Bool> {
@@ -441,6 +445,17 @@ public struct OnboardingView<Content: OnboardingContent>: View {
             set: { newValue in
                 if !newValue { self.errorMessage = nil }
             })
+    }
+}
+
+enum LayoutMetrics {
+    static func horizontalPadding(
+        for width: CGFloat,
+        compact: CGFloat,
+        regular: CGFloat,
+        breakpoint: CGFloat) -> CGFloat
+    {
+        width <= breakpoint ? compact : regular
     }
 }
 
@@ -518,36 +533,42 @@ private struct OnboardingPrimaryRouteDestinationContainer<Content: OnboardingCon
     let onNext: () -> Void
     let onDone: () -> Void
 
+    @ScaledMetric(relativeTo: .body) private var compactHorizontalPadding: CGFloat = Tokens.Layout.compactHorizontalPadding
+    @ScaledMetric(relativeTo: .body) private var regularHorizontalPadding: CGFloat = Tokens.Layout.regularHorizontalPadding
+
     var body: some View {
-        VStack(spacing: 0) {
-            self.destination
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                self.destination
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            Divider()
+                Divider()
 
-            Button {
-                self.isLastRoute ? self.onDone() : self.onNext()
-            } label: {
-                self.primaryButtonText
-                    .font(.body.weight(.semibold))
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Tokens.Platform.buttonVerticalPadding)
+                Button {
+                    self.isLastRoute ? self.onDone() : self.onNext()
+                } label: {
+                    self.primaryButtonText
+                        .font(.body.weight(.semibold))
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Tokens.Platform.buttonVerticalPadding)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.extraLarge)
+                #if os(macOS)
+                    .environment(\.controlActiveState, .key)
+                    .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.large))
+                #else
+                    .glassEffect(in: .rect(cornerRadius: Tokens.Radius.large))
+                #endif
+                .frame(maxWidth: Tokens.Layout.contentMaxWidth)
+                .padding(.horizontal, self.horizontalPadding(for: geometry.size.width))
+                .padding(.vertical, Tokens.Layout.footerVerticalPadding)
+                .frame(maxWidth: .infinity)
+                .background(Tokens.background)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.extraLarge)
-            #if os(macOS)
-                .environment(\.controlActiveState, .key)
-                .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.large))
-            #else
-                .glassEffect(in: .rect(cornerRadius: Tokens.Radius.large))
-            #endif
-            .frame(maxWidth: Tokens.Layout.contentMaxWidth)
-            .padding(.horizontal, Tokens.Layout.regularHorizontalPadding)
-            .padding(.vertical, Tokens.Spacing.medium)
-            .frame(maxWidth: .infinity)
-            .background(Tokens.background)
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
         .background(Tokens.background)
         #if os(macOS)
@@ -561,6 +582,14 @@ private struct OnboardingPrimaryRouteDestinationContainer<Content: OnboardingCon
 
     private var primaryButtonText: Text {
         self.isLastRoute ? self.content.primaryRouteDoneButtonText : self.content.primaryRouteNextButtonText
+    }
+
+    private func horizontalPadding(for width: CGFloat) -> CGFloat {
+        LayoutMetrics.horizontalPadding(
+            for: width,
+            compact: self.compactHorizontalPadding,
+            regular: self.regularHorizontalPadding,
+            breakpoint: Tokens.Layout.compactWidthBreakpoint)
     }
 }
 
@@ -868,7 +897,7 @@ private struct OnboardingFooterSection<Content: OnboardingContent>: View {
                 .disabled(self.isLoading)
             }
         }
-        .padding(.vertical, Tokens.Spacing.medium)
+        .padding(.vertical, Tokens.Layout.footerVerticalPadding)
     }
 }
 
