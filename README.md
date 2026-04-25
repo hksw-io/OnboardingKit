@@ -32,6 +32,7 @@ struct MyOnboarding: OnboardingContent {
     var features: [OnboardingFeatureItem] {
         [
             OnboardingFeatureItem(
+                id: "tap-to-flip",
                 systemImage: "hand.tap.fill",
                 label: "Tap to flip",
                 description: "Review cards with a simple tap."),
@@ -115,6 +116,7 @@ struct RootView: View {
 
 The view is purely presentational:
 
+- Give every `OnboardingFeatureItem`, `OnboardingNextStepItem`, and `OnboardingPrimaryRoute` a stable `id`. These IDs preserve SwiftUI identity and are used for routing and analytics.
 - `isLoading: Binding<Bool>` — when `true`, the primary button shows a progress spinner and both buttons are disabled.
 - `errorMessage: Binding<String?>` — when non-nil, the view presents an alert. Setting it back to `nil` (or letting the user tap the OK button) dismisses the alert.
 - `allowsInteractiveDismissal` — defaults to `true`. Set it to `false` only for setup flows that must block swipe or window dismissal.

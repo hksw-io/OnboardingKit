@@ -581,7 +581,7 @@ private struct OnboardingFeatureList: View {
 
     var body: some View {
         VStack(spacing: self.featureSpacing) {
-            ForEach(Array(self.features.enumerated()), id: \.offset) { index, feature in
+            ForEach(Array(self.features.enumerated()), id: \.element.id) { index, feature in
                 OnboardingFeatureRow(
                     feature: feature,
                     index: index,
@@ -663,7 +663,7 @@ private struct OnboardingNextStepsSection: View {
                 }
 
                 VStack(spacing: Tokens.Spacing.small) {
-                    ForEach(Array(self.steps.enumerated()), id: \.offset) { index, step in
+                    ForEach(Array(self.steps.enumerated()), id: \.element.id) { index, step in
                         OnboardingNextStepRow(
                             step: step,
                             index: self.animationStartIndex + index,
@@ -848,14 +848,17 @@ private struct OnboardingPreviewContent: OnboardingContent {
     var features: [OnboardingFeatureItem] {
         [
             OnboardingFeatureItem(
+                id: "tap-to-flip",
                 systemImage: "hand.tap.fill",
                 label: "Tap to flip",
                 description: "Review cards with a simple tap."),
             OnboardingFeatureItem(
+                id: "organize",
                 systemImage: "folder.fill",
                 label: "Organize",
                 description: "Group cards into decks and folders."),
             OnboardingFeatureItem(
+                id: "spaced-repetition",
                 systemImage: "brain.head.profile.fill",
                 label: "Spaced repetition",
                 description: "Study smarter, not harder."),
@@ -903,6 +906,7 @@ private struct LongOnboardingPreviewContent: OnboardingContent {
     var features: [OnboardingFeatureItem] {
         (1...12).map { index in
             OnboardingFeatureItem(
+                id: "long-feature-\(index)",
                 systemImage: "checkmark.circle.fill",
                 label: "Onboarding feature \(index) with a longer localized label",
                 description: "This onboarding description is long enough to wrap over multiple lines while keeping the icon, text, and action area stable.")

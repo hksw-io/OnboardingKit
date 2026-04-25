@@ -10,7 +10,7 @@ struct OnboardingViewBuildTest {
         struct MinimalContent: OnboardingContent {
             var title: Text { Text("Welcome") }
             var features: [OnboardingFeatureItem] {
-                [OnboardingFeatureItem(description: Text("One."))]
+                [OnboardingFeatureItem(id: "one", description: Text("One."))]
             }
             var primaryButtonText: Text { Text("Go") }
             var errorAlertTitle: Text { Text("Error") }
@@ -34,6 +34,7 @@ struct OnboardingViewBuildTest {
             var features: [OnboardingFeatureItem] {
                 [
                     OnboardingFeatureItem(
+                        id: "label",
                         image: Image(systemName: "star"),
                         label: Text("Label"),
                         description: Text("Description.")),
@@ -60,6 +61,7 @@ struct OnboardingViewBuildTest {
             var features: [OnboardingFeatureItem] {
                 [
                     OnboardingFeatureItem(
+                        id: "localized-label",
                         systemImage: "sparkles",
                         label: "Localized label",
                         description: "Localized description."),
@@ -83,7 +85,7 @@ struct OnboardingViewBuildTest {
         struct NextStepsContent: OnboardingContent {
             var title: Text { Text("Next") }
             var features: [OnboardingFeatureItem] {
-                [OnboardingFeatureItem(description: Text("One feature."))]
+                [OnboardingFeatureItem(id: "one-feature", description: Text("One feature."))]
             }
             var nextStepsTitle: Text? { Text("Try next") }
             var nextSteps: [OnboardingNextStepItem] {
@@ -120,7 +122,7 @@ struct OnboardingViewBuildTest {
         struct FlowContent: OnboardingContent {
             var title: Text { Text("Flow") }
             var features: [OnboardingFeatureItem] {
-                [OnboardingFeatureItem(description: Text("One feature."))]
+                [OnboardingFeatureItem(id: "one-feature", description: Text("One feature."))]
             }
             var nextSteps: [OnboardingNextStepItem] {
                 [
@@ -163,11 +165,21 @@ struct OnboardingViewBuildTest {
     }
 
     @Test
+    func featureInitializerStoresStableID() {
+        let feature = OnboardingFeatureItem(
+            id: "stable-feature",
+            label: Text("Stable feature"),
+            description: Text("A feature with stable identity."))
+
+        #expect(feature.id == "stable-feature")
+    }
+
+    @Test
     func viewConstructsWithPrimaryDestination() {
         struct PrimaryRouteContent: OnboardingContent {
             var title: Text { Text("Primary") }
             var features: [OnboardingFeatureItem] {
-                [OnboardingFeatureItem(description: Text("One feature."))]
+                [OnboardingFeatureItem(id: "one-feature", description: Text("One feature."))]
             }
             var primaryButtonText: Text { Text("Continue") }
             var errorAlertTitle: Text { Text("Error") }
@@ -190,7 +202,7 @@ struct OnboardingViewBuildTest {
         struct PrimaryRouteChainContent: OnboardingContent {
             var title: Text { Text("Primary") }
             var features: [OnboardingFeatureItem] {
-                [OnboardingFeatureItem(description: Text("One feature."))]
+                [OnboardingFeatureItem(id: "one-feature", description: Text("One feature."))]
             }
             var primaryRoutes: [OnboardingPrimaryRoute] {
                 [
@@ -223,7 +235,7 @@ struct OnboardingViewBuildTest {
         struct PrimaryRouteErrorContent: OnboardingContent {
             var title: Text { Text("Primary") }
             var features: [OnboardingFeatureItem] {
-                [OnboardingFeatureItem(description: Text("One feature."))]
+                [OnboardingFeatureItem(id: "one-feature", description: Text("One feature."))]
             }
             var primaryRoutes: [OnboardingPrimaryRoute] {
                 [OnboardingPrimaryRoute(id: "permissions")]
@@ -249,7 +261,7 @@ struct OnboardingViewBuildTest {
         struct BlockingContent: OnboardingContent {
             var title: Text { Text("Blocking") }
             var features: [OnboardingFeatureItem] {
-                [OnboardingFeatureItem(description: Text("One feature."))]
+                [OnboardingFeatureItem(id: "one-feature", description: Text("One feature."))]
             }
             var primaryButtonText: Text { Text("Continue") }
             var errorAlertTitle: Text { Text("Error") }
@@ -277,7 +289,7 @@ struct OnboardingViewBuildTest {
         struct DefaultNextStepsContent: OnboardingContent {
             var title: Text { Text("Defaults") }
             var features: [OnboardingFeatureItem] {
-                [OnboardingFeatureItem(description: Text("One feature."))]
+                [OnboardingFeatureItem(id: "one-feature", description: Text("One feature."))]
             }
             var primaryButtonText: Text { Text("Go") }
             var errorAlertTitle: Text { Text("Error") }
@@ -296,7 +308,7 @@ struct OnboardingViewBuildTest {
         struct ConvenienceContent: OnboardingContent {
             var title: Text { Text("Convenience") }
             var features: [OnboardingFeatureItem] {
-                [OnboardingFeatureItem(description: Text("One feature."))]
+                [OnboardingFeatureItem(id: "one-feature", description: Text("One feature."))]
             }
             var nextSteps: [OnboardingNextStepItem] {
                 [
@@ -335,6 +347,7 @@ struct OnboardingViewBuildTest {
             var features: [OnboardingFeatureItem] {
                 (1...12).map { index in
                     OnboardingFeatureItem(
+                        id: "feature-\(index)",
                         image: Image(systemName: "checkmark.circle.fill"),
                         label: Text("Onboarding feature \(index) with a longer localized label"),
                         description: Text(
@@ -382,9 +395,9 @@ struct OnboardingViewBuildTest {
             var title: Text { Text("Computed") }
             var features: [OnboardingFeatureItem] {
                 [
-                    OnboardingFeatureItem(description: Text("First computed feature.")),
-                    OnboardingFeatureItem(description: Text("Second computed feature.")),
-                    OnboardingFeatureItem(description: Text("Third computed feature.")),
+                    OnboardingFeatureItem(id: "first", description: Text("First computed feature.")),
+                    OnboardingFeatureItem(id: "second", description: Text("Second computed feature.")),
+                    OnboardingFeatureItem(id: "third", description: Text("Third computed feature.")),
                 ]
             }
             var primaryButtonText: Text { Text("Go") }
@@ -405,7 +418,7 @@ struct OnboardingViewBuildTest {
         struct StateContent: OnboardingContent {
             var title: Text { Text("State") }
             var features: [OnboardingFeatureItem] {
-                [OnboardingFeatureItem(description: Text("State feature."))]
+                [OnboardingFeatureItem(id: "state", description: Text("State feature."))]
             }
             var primaryButtonText: Text { Text("Start") }
             var skipButtonText: Text? { Text("Skip") }

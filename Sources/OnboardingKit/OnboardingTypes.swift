@@ -1,25 +1,46 @@
 import SwiftUI
 
 public struct OnboardingFeatureItem: Identifiable {
-    public let id = UUID()
+    public let id: String
     public let image: Image?
     public let label: Text?
     public let description: Text
 
-    public init(image: Image? = nil, label: Text? = nil, description: Text) {
+    public init(id: String, image: Image? = nil, label: Text? = nil, description: Text) {
+        self.id = id
         self.image = image
         self.label = label
         self.description = description
     }
 
     public init(
+        id: String,
         systemImage: String? = nil,
         label: LocalizedStringResource? = nil,
         description: LocalizedStringResource)
     {
+        self.id = id
         self.image = systemImage.map { Image(systemName: $0) }
         self.label = label.map { Text($0) }
         self.description = Text(description)
+    }
+
+    @available(*, deprecated, message: "Provide a stable id so SwiftUI can preserve feature identity.")
+    public init(image: Image? = nil, label: Text? = nil, description: Text) {
+        self.init(id: UUID().uuidString, image: image, label: label, description: description)
+    }
+
+    @available(*, deprecated, message: "Provide a stable id so SwiftUI can preserve feature identity.")
+    public init(
+        systemImage: String? = nil,
+        label: LocalizedStringResource? = nil,
+        description: LocalizedStringResource)
+    {
+        self.init(
+            id: UUID().uuidString,
+            systemImage: systemImage,
+            label: label,
+            description: description)
     }
 }
 
@@ -32,7 +53,7 @@ public struct OnboardingNextStepItem: Identifiable {
     public let presentation: OnboardingNextStepPresentation
 
     public init(
-        id: String = UUID().uuidString,
+        id: String,
         image: Image? = nil,
         title: Text,
         description: Text? = nil,
@@ -48,7 +69,7 @@ public struct OnboardingNextStepItem: Identifiable {
     }
 
     public init(
-        id: String = UUID().uuidString,
+        id: String,
         systemImage: String? = nil,
         title: LocalizedStringResource,
         description: LocalizedStringResource? = nil,
@@ -61,6 +82,40 @@ public struct OnboardingNextStepItem: Identifiable {
         self.description = description.map { Text($0) }
         self.actionText = actionText.map { Text($0) }
         self.presentation = presentation
+    }
+
+    @available(*, deprecated, message: "Provide a stable id for routing, analytics, and SwiftUI identity.")
+    public init(
+        image: Image? = nil,
+        title: Text,
+        description: Text? = nil,
+        actionText: Text? = nil,
+        presentation: OnboardingNextStepPresentation = .push)
+    {
+        self.init(
+            id: UUID().uuidString,
+            image: image,
+            title: title,
+            description: description,
+            actionText: actionText,
+            presentation: presentation)
+    }
+
+    @available(*, deprecated, message: "Provide a stable id for routing, analytics, and SwiftUI identity.")
+    public init(
+        systemImage: String? = nil,
+        title: LocalizedStringResource,
+        description: LocalizedStringResource? = nil,
+        actionText: LocalizedStringResource? = nil,
+        presentation: OnboardingNextStepPresentation = .push)
+    {
+        self.init(
+            id: UUID().uuidString,
+            systemImage: systemImage,
+            title: title,
+            description: description,
+            actionText: actionText,
+            presentation: presentation)
     }
 }
 
