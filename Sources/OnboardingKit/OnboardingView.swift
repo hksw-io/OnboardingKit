@@ -24,6 +24,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
     @State private var activePrimaryDestination = false
     @State private var activePrimaryRouteID: OnboardingPrimaryRoute.ID?
     @State private var routeTransitionDirection: OnboardingRouteTransitionDirection = .forward
+    @State private var footerHeight: CGFloat = 0
 
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = Tokens.Platform.iconSize
     @ScaledMetric(relativeTo: .body) private var featureIconSize: CGFloat = Tokens.Platform.featureIconSize
@@ -309,6 +310,12 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                     self.scrollEdgeFadeOpacity = newOpacity
                 }
             }
+            .mask {
+                FooterContentMask(
+                    footerHeight: self.footerHeight,
+                    fadeHeight: self.scrollEdgeFadeHeight,
+                    scrollEdgeFadeOpacity: self.scrollEdgeFadeOpacity)
+            }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 ZStack {
                     OnboardingFooterSection(
@@ -320,21 +327,14 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                         .frame(maxWidth: Tokens.Layout.contentMaxWidth)
                         .padding(.horizontal, self.horizontalPadding(for: geometry.size.width))
                 }
-                .frame(maxWidth: .infinity)
-                .background(alignment: .top) {
-                    LinearGradient(
-                        colors: [
-                            Tokens.background.opacity(0),
-                            self.background.footerFadeEndColor,
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom)
-                        .frame(height: self.scrollEdgeFadeHeight)
-                        .offset(y: -self.scrollEdgeFadeHeight)
-                        .opacity(self.scrollEdgeFadeOpacity)
-                        .allowsHitTesting(false)
+                .onGeometryChange(for: CGFloat.self) { geometry in
+                    FooterMaskMetrics.quantizedHeight(geometry.size.height)
+                } action: { newHeight in
+                    if self.footerHeight != newHeight {
+                        self.footerHeight = newHeight
+                    }
                 }
-                .background(self.background.footerSurfaceStyle)
+                .frame(maxWidth: .infinity)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
@@ -514,6 +514,49 @@ enum ScrollEdgeFade {
     }
 }
 
+enum FooterMaskMetrics {
+    static let heightStep: CGFloat = 1
+
+    static func quantizedHeight(_ height: CGFloat, step: CGFloat = Self.heightStep) -> CGFloat {
+        guard height > 0, step > 0 else {
+            return 0
+        }
+
+        return (height / step).rounded() * step
+    }
+
+    static func fadeBottomOpacity(scrollEdgeFadeOpacity: Double) -> Double {
+        1 - min(1, max(0, scrollEdgeFadeOpacity))
+    }
+}
+
+private struct FooterContentMask: View {
+    let footerHeight: CGFloat
+    let fadeHeight: CGFloat
+    let scrollEdgeFadeOpacity: Double
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Rectangle()
+                .fill(.black)
+
+            LinearGradient(
+                colors: [
+                    .black,
+                    .black.opacity(FooterMaskMetrics.fadeBottomOpacity(
+                        scrollEdgeFadeOpacity: self.scrollEdgeFadeOpacity)),
+                ],
+                startPoint: .top,
+                endPoint: .bottom)
+                .frame(height: max(0, self.fadeHeight))
+
+            Rectangle()
+                .fill(.clear)
+                .frame(height: max(0, self.footerHeight))
+        }
+    }
+}
+
 enum OnboardingAccessibilityText {
     static func nextStepHint(for presentation: OnboardingNextStepPresentation) -> String {
         switch presentation {
@@ -615,7 +658,6 @@ private struct OnboardingPrimaryRouteDestinationContainer<Content: OnboardingCon
                 .padding(.horizontal, self.horizontalPadding(for: geometry.size.width))
                 .padding(.vertical, Tokens.Layout.footerVerticalPadding)
                 .frame(maxWidth: .infinity)
-                .background(self.background.footerSurfaceStyle)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }

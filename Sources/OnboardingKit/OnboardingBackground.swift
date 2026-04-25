@@ -50,18 +50,6 @@ public struct OnboardingBackground {
 }
 
 extension OnboardingBackground {
-    var spansBehindFooter: Bool {
-        true
-    }
-
-    var footerSurfaceStyle: AnyShapeStyle {
-        AnyShapeStyle(.clear)
-    }
-
-    var footerFadeEndColor: Color {
-        .clear
-    }
-
     func makeView(context: OnboardingBackgroundContext) -> AnyView {
         switch self.storage {
         case .system:

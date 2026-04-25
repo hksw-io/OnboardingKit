@@ -234,16 +234,19 @@ struct OnboardingViewBuildTest {
     }
 
     @Test
-    func systemBackgroundSpansBehindFooterSurface() {
-        #expect(OnboardingBackground.system.spansBehindFooter)
+    func footerMaskHeightQuantizesToWholePoints() {
+        #expect(FooterMaskMetrics.quantizedHeight(123.4) == 123)
+        #expect(FooterMaskMetrics.quantizedHeight(123.5) == 124)
     }
 
     @Test
-    func customAndGradientBackgroundsSpanBehindFooterSurface() {
-        #expect(OnboardingBackground.softGradient.spansBehindFooter)
-        #expect(OnboardingBackground.linearGradient(colors: [.blue, .mint]).spansBehindFooter)
-        #expect(OnboardingBackground.animatedMesh().spansBehindFooter)
-        #expect(OnboardingBackground.custom { _ in Color.blue }.spansBehindFooter)
+    func footerMaskFadeBottomIsHiddenWhenScrollableContentContinues() {
+        #expect(FooterMaskMetrics.fadeBottomOpacity(scrollEdgeFadeOpacity: 1) == 0)
+    }
+
+    @Test
+    func footerMaskFadeBottomIsVisibleAtScrollEnd() {
+        #expect(FooterMaskMetrics.fadeBottomOpacity(scrollEdgeFadeOpacity: 0) == 1)
     }
 
     @Test
