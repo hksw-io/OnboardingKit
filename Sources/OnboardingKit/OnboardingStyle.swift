@@ -8,12 +8,6 @@ public struct OnboardingStyle {
     public var featureIconColor: Color?
     public var featureTitleColor: Color?
     public var featureDescriptionColor: Color?
-    public var nextStepsTitleColor: Color?
-    public var nextStepIconColor: Color?
-    public var nextStepTitleColor: Color?
-    public var nextStepDescriptionColor: Color?
-    public var nextStepActionColor: Color?
-    public var nextStepAccessoryColor: Color?
     public var primaryButtonForegroundColor: Color?
     public var primaryButtonProgressTint: Color?
     public var secondaryButtonColor: Color?
@@ -29,12 +23,6 @@ public struct OnboardingStyle {
         featureIconColor: Color? = nil,
         featureTitleColor: Color? = nil,
         featureDescriptionColor: Color? = nil,
-        nextStepsTitleColor: Color? = nil,
-        nextStepIconColor: Color? = nil,
-        nextStepTitleColor: Color? = nil,
-        nextStepDescriptionColor: Color? = nil,
-        nextStepActionColor: Color? = nil,
-        nextStepAccessoryColor: Color? = nil,
         primaryButtonForegroundColor: Color? = nil,
         primaryButtonProgressTint: Color? = nil,
         secondaryButtonColor: Color? = nil)
@@ -45,12 +33,6 @@ public struct OnboardingStyle {
         self.featureIconColor = featureIconColor
         self.featureTitleColor = featureTitleColor
         self.featureDescriptionColor = featureDescriptionColor
-        self.nextStepsTitleColor = nextStepsTitleColor
-        self.nextStepIconColor = nextStepIconColor
-        self.nextStepTitleColor = nextStepTitleColor
-        self.nextStepDescriptionColor = nextStepDescriptionColor
-        self.nextStepActionColor = nextStepActionColor
-        self.nextStepAccessoryColor = nextStepAccessoryColor
         self.primaryButtonForegroundColor = primaryButtonForegroundColor
         self.primaryButtonProgressTint = primaryButtonProgressTint
         self.secondaryButtonColor = secondaryButtonColor
@@ -68,22 +50,6 @@ extension OnboardingStyle {
 
     var featureDescriptionForegroundStyle: AnyShapeStyle {
         Self.foregroundStyle(for: self.featureDescriptionColor, fallback: AnyShapeStyle(.secondary))
-    }
-
-    var nextStepIconForegroundStyle: AnyShapeStyle {
-        Self.foregroundStyle(for: self.nextStepIconColor ?? self.tint, fallback: AnyShapeStyle(.tint))
-    }
-
-    var nextStepDescriptionForegroundStyle: AnyShapeStyle {
-        Self.foregroundStyle(for: self.nextStepDescriptionColor, fallback: AnyShapeStyle(.secondary))
-    }
-
-    var nextStepActionForegroundStyle: AnyShapeStyle {
-        Self.foregroundStyle(for: self.nextStepActionColor ?? self.tint, fallback: AnyShapeStyle(.tint))
-    }
-
-    var nextStepAccessoryForegroundStyle: AnyShapeStyle {
-        Self.foregroundStyle(for: self.nextStepAccessoryColor, fallback: AnyShapeStyle(.secondary))
     }
 
     var secondaryButtonForegroundStyle: AnyShapeStyle {

@@ -46,23 +46,6 @@ struct MyOnboarding: OnboardingContent {
                 description: "Review cards with a simple tap."),
         ]
     }
-    var nextSteps: [OnboardingNextStepItem] {
-        [
-            OnboardingNextStepItem(
-                id: "create-deck",
-                systemImage: "square.and.pencil",
-                title: "Create your first deck",
-                description: "Start with a small set so the app can learn your rhythm.",
-                actionText: "Open"),
-            OnboardingNextStepItem(
-                id: "notifications",
-                systemImage: "bell.badge.fill",
-                title: "Enable reminders",
-                description: "Show a focused setup sheet after the overview.",
-                actionText: "Configure",
-                presentation: .sheet),
-        ]
-    }
     var primaryRoutes: [OnboardingPrimaryRoute] {
         [
             OnboardingPrimaryRoute(id: "permissions"),
@@ -88,9 +71,6 @@ struct RootView: View {
             errorMessage: $errorMessage,
             onPrimary: { /* analytics or setup before routes open */ },
             onSkip: { /* mark onboarding complete, dismiss */ },
-            onNextStep: { step in
-                /* analytics or state updates before presentation */
-            },
             onPrimaryRoutesComplete: {
                 /* dismiss onboarding or mark setup complete */
             },
@@ -105,26 +85,14 @@ struct RootView: View {
                 default:
                     EmptyView()
                 }
-            },
-            nextStepDestination: { step in
-                switch step.id {
-                case "create-deck":
-                    CreateDeckSetupView()
-                case "notifications":
-                    ReminderSetupView()
-                default:
-                    EmptyView()
-                }
             })
     }
 }
 ```
 
-For a simple onboarding sheet, omit `primaryRoutes`, `primaryRouteDestination`, `nextSteps`, and `nextStepDestination`. The primary and skip callbacks can then dismiss the sheet directly.
+For a simple onboarding sheet, omit `primaryRoutes` and `primaryRouteDestination`. The primary and skip callbacks can then dismiss the sheet directly.
 
 For a chained setup flow, provide `primaryRoutes` and `primaryRouteDestination`. `onPrimary` fires first, then the library opens the first route with an in-sheet transition. Do not dismiss from `onPrimary` when using a route chain. Finish in `onPrimaryRoutesComplete` after the last route.
-
-For optional follow-up actions, provide `nextSteps` and `nextStepDestination`. Use `presentation: .push` to keep the user in the current onboarding flow, or `.sheet` for a focused setup task.
 
 ## Backgrounds
 
@@ -145,7 +113,7 @@ Built-in options:
 - `.system` — the default platform background.
 - `.softGradient` — a restrained blue/mint background tuned for readable onboarding content.
 - `.linearGradient(colors:startPoint:endPoint:)` — app-provided colors with the library-managed footer treatment.
-- `.animatedMesh(primary:secondary:accent:)` — an opt-in animated mesh gradient. It automatically becomes static when Reduce Motion is enabled.
+- `.animatedMesh(primary:secondary:accent:)` — an opt-in full-surface animated mesh gradient. It keeps a tinted base across the whole sheet and automatically becomes static when Reduce Motion is enabled.
 - `.custom { context in ... }` — a fully custom SwiftUI background. Use `context.reduceMotion` to keep custom animations accessible.
 
 Destination views can still draw their own backgrounds. If they do, that local destination background appears above the onboarding background.
@@ -168,27 +136,24 @@ OnboardingView(
         tint: .indigo,
         titleColor: .primary,
         featureIconColor: .mint,
-        nextStepActionColor: .indigo,
         primaryButtonForegroundColor: .white,
         primaryButtonProgressTint: .white,
         secondaryButtonColor: .secondary))
 ```
 
-`OnboardingBackground` controls the surface behind the sheet content. `OnboardingStyle` controls foreground roles such as title, subtitle, feature rows, next-step rows, primary button text, and secondary button text. Any color you leave as `nil` uses the standard system treatment.
+`OnboardingBackground` controls the surface behind the sheet content. `OnboardingStyle` controls foreground roles such as title, subtitle, feature rows, primary button text, and secondary button text. Any color you leave as `nil` uses the standard system treatment.
 
 ## State ownership
 
 The view is purely presentational:
 
-- Give every `OnboardingFeatureItem`, `OnboardingNextStepItem`, and `OnboardingPrimaryRoute` a stable `id`. These IDs preserve SwiftUI identity and are used for routing and analytics.
+- Give every `OnboardingFeatureItem` and `OnboardingPrimaryRoute` a stable `id`. These IDs preserve SwiftUI identity and are used for routing and analytics.
 - `isLoading: Binding<Bool>` — when `true`, the primary button shows a progress spinner and both buttons are disabled.
 - `errorMessage: Binding<String?>` — when non-nil, the view presents an alert. Setting it back to `nil` (or letting the user tap the OK button) dismisses the alert.
 - `allowsInteractiveDismissal` — defaults to `true`. Set it to `false` only for setup flows that must block swipe or window dismissal.
 - `onPrimary` / `onSkip` — fired on tap. Your state layer handles the rest.
 - `primaryRoutes` / `primaryRouteDestination` — optional chained follow-up routes opened by the primary button with in-sheet slide transitions. The package supplies Next and Done controls.
 - `primaryDestination` — convenience API for a single follow-up route. `onPrimary` still fires before the route opens.
-- `nextSteps` / `nextStepDestination` — optional follow-up routes inside onboarding. Give each step a stable `id`; use `presentation: .push` for an in-flow route or `.sheet` for a focused setup sheet.
-- `onNextStep` — optional hook fired before the route or sheet opens, useful for analytics or app state.
 
 Route navigation state is intentionally transient and owned inside `OnboardingView`; persist only completed setup state in your app. Destination builders are generic at the public API and type-erased internally so call sites can return different SwiftUI views without exposing that plumbing.
 

@@ -10,17 +10,13 @@ public struct OnboardingView<Content: OnboardingContent>: View {
     private var style: OnboardingStyle = .standard
     let onPrimary: () -> Void
     let onSkip: () -> Void
-    let onNextStep: (OnboardingNextStepItem) -> Void
     let primaryDestination: (() -> AnyView)?
     let primaryRouteDestination: ((OnboardingPrimaryRoute) -> AnyView)?
     let onPrimaryRoutesComplete: () -> Void
-    let nextStepDestination: ((OnboardingNextStepItem) -> AnyView)?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var featuresVisible = false
     @State private var scrollEdgeFadeOpacity: Double = 1
-    @State private var pushedNextSteps: [PresentedOnboardingNextStep] = []
-    @State private var sheetNextStep: PresentedOnboardingNextStep?
     @State private var activePrimaryDestination = false
     @State private var activePrimaryRouteID: OnboardingPrimaryRoute.ID?
     @State private var routeTransitionDirection: OnboardingRouteTransitionDirection = .forward
@@ -42,8 +38,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         errorMessage: Binding<String?>,
         allowsInteractiveDismissal: Bool = true,
         onPrimary: @escaping () -> Void,
-        onSkip: @escaping () -> Void,
-        onNextStep: @escaping (OnboardingNextStepItem) -> Void = { _ in })
+        onSkip: @escaping () -> Void)
     {
         self.content = content
         self._isLoading = isLoading
@@ -51,11 +46,9 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         self.allowsInteractiveDismissal = allowsInteractiveDismissal
         self.onPrimary = onPrimary
         self.onSkip = onSkip
-        self.onNextStep = onNextStep
         self.primaryDestination = nil
         self.primaryRouteDestination = nil
         self.onPrimaryRoutesComplete = {}
-        self.nextStepDestination = nil
     }
 
     public init<PrimaryDestination: View>(
@@ -65,7 +58,6 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         allowsInteractiveDismissal: Bool = true,
         onPrimary: @escaping () -> Void,
         onSkip: @escaping () -> Void,
-        onNextStep: @escaping (OnboardingNextStepItem) -> Void = { _ in },
         @ViewBuilder primaryDestination: @escaping () -> PrimaryDestination)
     {
         self.content = content
@@ -74,11 +66,9 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         self.allowsInteractiveDismissal = allowsInteractiveDismissal
         self.onPrimary = onPrimary
         self.onSkip = onSkip
-        self.onNextStep = onNextStep
         self.primaryDestination = { AnyView(primaryDestination()) }
         self.primaryRouteDestination = nil
         self.onPrimaryRoutesComplete = {}
-        self.nextStepDestination = nil
     }
 
     public init<PrimaryRouteDestination: View>(
@@ -88,7 +78,6 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         allowsInteractiveDismissal: Bool = true,
         onPrimary: @escaping () -> Void,
         onSkip: @escaping () -> Void,
-        onNextStep: @escaping (OnboardingNextStepItem) -> Void = { _ in },
         onPrimaryRoutesComplete: @escaping () -> Void = {},
         @ViewBuilder primaryRouteDestination: @escaping (OnboardingPrimaryRoute) -> PrimaryRouteDestination)
     {
@@ -98,120 +87,30 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         self.allowsInteractiveDismissal = allowsInteractiveDismissal
         self.onPrimary = onPrimary
         self.onSkip = onSkip
-        self.onNextStep = onNextStep
         self.primaryDestination = nil
         self.primaryRouteDestination = { AnyView(primaryRouteDestination($0)) }
         self.onPrimaryRoutesComplete = onPrimaryRoutesComplete
-        self.nextStepDestination = nil
-    }
-
-    public init<NextStepDestination: View>(
-        content: Content,
-        isLoading: Binding<Bool>,
-        errorMessage: Binding<String?>,
-        allowsInteractiveDismissal: Bool = true,
-        onPrimary: @escaping () -> Void,
-        onSkip: @escaping () -> Void,
-        onNextStep: @escaping (OnboardingNextStepItem) -> Void = { _ in },
-        @ViewBuilder nextStepDestination: @escaping (OnboardingNextStepItem) -> NextStepDestination)
-    {
-        self.content = content
-        self._isLoading = isLoading
-        self._errorMessage = errorMessage
-        self.allowsInteractiveDismissal = allowsInteractiveDismissal
-        self.onPrimary = onPrimary
-        self.onSkip = onSkip
-        self.onNextStep = onNextStep
-        self.primaryDestination = nil
-        self.primaryRouteDestination = nil
-        self.onPrimaryRoutesComplete = {}
-        self.nextStepDestination = { AnyView(nextStepDestination($0)) }
-    }
-
-    public init<PrimaryDestination: View, NextStepDestination: View>(
-        content: Content,
-        isLoading: Binding<Bool>,
-        errorMessage: Binding<String?>,
-        allowsInteractiveDismissal: Bool = true,
-        onPrimary: @escaping () -> Void,
-        onSkip: @escaping () -> Void,
-        onNextStep: @escaping (OnboardingNextStepItem) -> Void = { _ in },
-        @ViewBuilder primaryDestination: @escaping () -> PrimaryDestination,
-        @ViewBuilder nextStepDestination: @escaping (OnboardingNextStepItem) -> NextStepDestination)
-    {
-        self.content = content
-        self._isLoading = isLoading
-        self._errorMessage = errorMessage
-        self.allowsInteractiveDismissal = allowsInteractiveDismissal
-        self.onPrimary = onPrimary
-        self.onSkip = onSkip
-        self.onNextStep = onNextStep
-        self.primaryDestination = { AnyView(primaryDestination()) }
-        self.primaryRouteDestination = nil
-        self.onPrimaryRoutesComplete = {}
-        self.nextStepDestination = { AnyView(nextStepDestination($0)) }
-    }
-
-    public init<PrimaryRouteDestination: View, NextStepDestination: View>(
-        content: Content,
-        isLoading: Binding<Bool>,
-        errorMessage: Binding<String?>,
-        allowsInteractiveDismissal: Bool = true,
-        onPrimary: @escaping () -> Void,
-        onSkip: @escaping () -> Void,
-        onNextStep: @escaping (OnboardingNextStepItem) -> Void = { _ in },
-        onPrimaryRoutesComplete: @escaping () -> Void = {},
-        @ViewBuilder primaryRouteDestination: @escaping (OnboardingPrimaryRoute) -> PrimaryRouteDestination,
-        @ViewBuilder nextStepDestination: @escaping (OnboardingNextStepItem) -> NextStepDestination)
-    {
-        self.content = content
-        self._isLoading = isLoading
-        self._errorMessage = errorMessage
-        self.allowsInteractiveDismissal = allowsInteractiveDismissal
-        self.onPrimary = onPrimary
-        self.onSkip = onSkip
-        self.onNextStep = onNextStep
-        self.primaryDestination = nil
-        self.primaryRouteDestination = { AnyView(primaryRouteDestination($0)) }
-        self.onPrimaryRoutesComplete = onPrimaryRoutesComplete
-        self.nextStepDestination = { AnyView(nextStepDestination($0)) }
     }
 
     public var body: some View {
-        Group {
-            if self.nextStepDestination == nil {
-                self.onboardingContent
-            } else {
-                NavigationStack(path: self.$pushedNextSteps) {
-                    self.onboardingContent
-                        .navigationDestination(for: PresentedOnboardingNextStep.self) { presentedStep in
-                            self.nextStepDestination(for: presentedStep.step)
-                        }
-                }
-            }
-        }
-        .onboardingTint(self.style.tint)
-        .sheet(item: self.$sheetNextStep) { presentedStep in
-            NavigationStack {
-                self.nextStepDestination(for: presentedStep.step)
-            }
-        }
-        .alert(
-            self.content.errorAlertTitle,
-            isPresented: self.errorPresented,
-            actions: {
-                Button(role: .cancel) {
-                    self.errorMessage = nil
-                } label: {
-                    self.content.errorOKText
-                }
-            },
-            message: {
-                if let message = self.errorMessage {
-                    Text(message)
-                }
-            })
-        .interactiveDismissDisabled(!self.allowsInteractiveDismissal)
+        self.onboardingContent
+            .onboardingTint(self.style.tint)
+            .alert(
+                self.content.errorAlertTitle,
+                isPresented: self.errorPresented,
+                actions: {
+                    Button(role: .cancel) {
+                        self.errorMessage = nil
+                    } label: {
+                        self.content.errorOKText
+                    }
+                },
+                message: {
+                    if let message = self.errorMessage {
+                        Text(message)
+                    }
+                })
+            .interactiveDismissDisabled(!self.allowsInteractiveDismissal)
     }
 
     public func onboardingBackground(_ background: OnboardingBackground) -> Self {
@@ -280,17 +179,6 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                         featuresVisible: self.featuresVisible,
                         reduceMotion: self.reduceMotion,
                         style: self.style)
-                    OnboardingNextStepsSection(
-                        title: self.content.nextStepsTitle,
-                        steps: self.content.nextSteps,
-                        featureIconSize: self.featureIconSize,
-                        animationStartIndex: self.content.features.count,
-                        itemsVisible: self.featuresVisible,
-                        reduceMotion: self.reduceMotion,
-                        isLoading: self.isLoading,
-                        hasDestination: self.nextStepDestination != nil,
-                        style: self.style,
-                        onNextStep: self.selectNextStep)
                 }
                 .frame(maxWidth: Tokens.Layout.contentMaxWidth)
                 .frame(maxWidth: .infinity)
@@ -352,25 +240,6 @@ public struct OnboardingView<Content: OnboardingContent>: View {
             }
     }
 
-    private func selectNextStep(_ step: OnboardingNextStepItem) {
-        self.onNextStep(step)
-
-        guard self.nextStepDestination != nil else {
-            return
-        }
-
-        let presentedStep = PresentedOnboardingNextStep(step: step)
-        switch step.presentation {
-        case .push:
-            guard self.pushedNextSteps.last?.id != presentedStep.id else {
-                return
-            }
-            self.pushedNextSteps.append(presentedStep)
-        case .sheet:
-            self.sheetNextStep = presentedStep
-        }
-    }
-
     private func performPrimaryAction() {
         self.onPrimary()
 
@@ -390,15 +259,6 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         self.routeTransitionDirection = .forward
         withAnimation(self.routeAnimation) {
             self.activePrimaryDestination = true
-        }
-    }
-
-    @ViewBuilder
-    private func nextStepDestination(for step: OnboardingNextStepItem) -> some View {
-        if let nextStepDestination = self.nextStepDestination {
-            nextStepDestination(step)
-        } else {
-            EmptyView()
         }
     }
 
@@ -644,38 +504,9 @@ private struct FooterContentMask: View {
     }
 }
 
-enum OnboardingAccessibilityText {
-    static func nextStepHint(for presentation: OnboardingNextStepPresentation) -> String {
-        switch presentation {
-        case .push:
-            "Opens a follow-up screen."
-        case .sheet:
-            "Presents a follow-up sheet."
-        }
-    }
-}
-
 private enum OnboardingRouteTransitionDirection {
     case forward
     case backward
-}
-
-private struct PresentedOnboardingNextStep: Identifiable, Hashable {
-    let id: OnboardingNextStepItem.ID
-    let step: OnboardingNextStepItem
-
-    init(step: OnboardingNextStepItem) {
-        self.id = step.id
-        self.step = step
-    }
-
-    static func == (lhs: PresentedOnboardingNextStep, rhs: PresentedOnboardingNextStep) -> Bool {
-        lhs.id == rhs.id
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(self.id)
-    }
 }
 
 private struct OnboardingBackgroundView: View {
@@ -884,159 +715,6 @@ private struct OnboardingFeatureRow: View {
     }
 }
 
-private struct OnboardingNextStepsSection: View {
-    let title: Text?
-    let steps: [OnboardingNextStepItem]
-    let featureIconSize: CGFloat
-    let animationStartIndex: Int
-    let itemsVisible: Bool
-    let reduceMotion: Bool
-    let isLoading: Bool
-    let hasDestination: Bool
-    let style: OnboardingStyle
-    let onNextStep: (OnboardingNextStepItem) -> Void
-
-    var body: some View {
-        if !self.steps.isEmpty {
-            VStack(alignment: .leading, spacing: Tokens.Spacing.medium) {
-                if let title = self.title {
-                    title
-                        .font(.headline)
-                        .onboardingOptionalForegroundStyle(self.style.nextStepsTitleColor)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityAddTraits(.isHeader)
-                }
-
-                VStack(spacing: Tokens.Spacing.small) {
-                    ForEach(Array(self.steps.enumerated()), id: \.element.id) { index, step in
-                        OnboardingNextStepRow(
-                            step: step,
-                            index: self.animationStartIndex + index,
-                            featureIconSize: self.featureIconSize,
-                            isVisible: self.itemsVisible,
-                            reduceMotion: self.reduceMotion,
-                            isLoading: self.isLoading,
-                            isActionable: self.hasDestination || step.actionText != nil,
-                            style: self.style,
-                            onNextStep: self.onNextStep)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityElement(children: .contain)
-        }
-    }
-}
-
-private struct OnboardingNextStepRow: View {
-    let step: OnboardingNextStepItem
-    let index: Int
-    let featureIconSize: CGFloat
-    let isVisible: Bool
-    let reduceMotion: Bool
-    let isLoading: Bool
-    let isActionable: Bool
-    let style: OnboardingStyle
-    let onNextStep: (OnboardingNextStepItem) -> Void
-
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-
-    var body: some View {
-        let delay = Tokens.Motion.revealDelay(for: self.index)
-
-        Group {
-            if self.isActionable {
-                Button {
-                    self.onNextStep(self.step)
-                } label: {
-                    self.content
-                }
-                .buttonStyle(.plain)
-                .disabled(self.isLoading)
-            } else {
-                self.content
-            }
-        }
-        .padding(Tokens.Spacing.medium)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(self.rowBackgroundStyle, in: .rect(cornerRadius: Tokens.Radius.large))
-        .overlay {
-            RoundedRectangle(cornerRadius: Tokens.Radius.large)
-                .stroke(.quaternary, lineWidth: 1)
-        }
-        .accessibilityElement(children: .combine)
-        .modifier(OnboardingNextStepAccessibilityModifier(
-            isActionable: self.isActionable,
-            presentation: self.step.presentation))
-        .opacity(self.isVisible ? 1 : 0)
-        .offset(y: self.isVisible ? 0 : (self.reduceMotion ? 0 : Tokens.Motion.revealOffset))
-        .animation(
-            self.reduceMotion ? nil : .easeOut(duration: Tokens.Motion.revealDuration).delay(delay),
-            value: self.isVisible)
-    }
-
-    private var rowBackgroundStyle: AnyShapeStyle {
-        if self.reduceTransparency {
-            AnyShapeStyle(Tokens.background)
-        } else {
-            AnyShapeStyle(.thinMaterial)
-        }
-    }
-
-    private var content: some View {
-        HStack(alignment: .top, spacing: Tokens.Spacing.medium) {
-            if let image = self.step.image {
-                image
-                    .resizable()
-                    .scaledToFit()
-                    .symbolRenderingMode(.hierarchical)
-                    .frame(width: self.featureIconSize, height: self.featureIconSize)
-                    .foregroundStyle(self.style.nextStepIconForegroundStyle)
-                    .accessibilityHidden(true)
-            }
-
-            VStack(alignment: .leading, spacing: Tokens.Spacing.small) {
-                self.step.title
-                    .font(.subheadline.weight(.semibold))
-                    .onboardingOptionalForegroundStyle(self.style.nextStepTitleColor)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                if let description = self.step.description {
-                    description
-                        .font(.footnote)
-                        .foregroundStyle(self.style.nextStepDescriptionForegroundStyle)
-                        .lineSpacing(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                if let actionText = self.step.actionText {
-                    HStack(spacing: Tokens.Spacing.small) {
-                        actionText
-                            .font(.footnote.weight(.semibold))
-
-                        Image(systemName: "chevron.right")
-                            .font(.footnote.weight(.semibold))
-                            .accessibilityHidden(true)
-                    }
-                    .foregroundStyle(self.style.nextStepActionForegroundStyle)
-                    .padding(.top, 2)
-                }
-            }
-            .multilineTextAlignment(.leading)
-            .layoutPriority(1)
-
-            if self.isActionable, self.step.actionText == nil {
-                Image(systemName: self.step.presentation == .sheet ? "arrow.up.right.square" : "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(self.style.nextStepAccessoryForegroundStyle)
-                    .accessibilityHidden(true)
-            }
-
-            Spacer(minLength: 0)
-        }
-    }
-}
-
 private struct OnboardingFooterSection<Content: OnboardingContent>: View {
     let content: Content
     let isLoading: Bool
@@ -1105,20 +783,6 @@ private struct OnboardingFooterSection<Content: OnboardingContent>: View {
     }
 }
 
-private struct OnboardingNextStepAccessibilityModifier: ViewModifier {
-    let isActionable: Bool
-    let presentation: OnboardingNextStepPresentation
-
-    @ViewBuilder
-    func body(content: Content) -> some View {
-        if self.isActionable {
-            content.accessibilityHint(Text(OnboardingAccessibilityText.nextStepHint(for: self.presentation)))
-        } else {
-            content
-        }
-    }
-}
-
 private extension View {
     @ViewBuilder
     func onboardingTint(_ color: Color?) -> some View {
@@ -1162,23 +826,6 @@ private struct OnboardingPreviewContent: OnboardingContent {
                 description: "Study smarter, not harder."),
         ]
     }
-    var nextSteps: [OnboardingNextStepItem] {
-        [
-            OnboardingNextStepItem(
-                id: "create-deck",
-                systemImage: "square.and.pencil",
-                title: "Create your first deck",
-                description: "Start with a small set so the app can learn your rhythm.",
-                actionText: "Open"),
-            OnboardingNextStepItem(
-                id: "study-reminder",
-                systemImage: "bell.badge.fill",
-                title: "Set a study reminder",
-                description: "Pick a time that fits into your day.",
-                actionText: "Configure",
-                presentation: .sheet),
-        ]
-    }
     var primaryRoutes: [OnboardingPrimaryRoute] {
         [
             OnboardingPrimaryRoute(id: "permissions"),
@@ -1210,23 +857,6 @@ private struct LongOnboardingPreviewContent: OnboardingContent {
                 description: "This onboarding description is long enough to wrap over multiple lines while keeping the icon, text, and action area stable.")
         }
     }
-    var nextStepsTitle: Text? { Text("Recommended next steps") }
-    var nextSteps: [OnboardingNextStepItem] {
-        [
-            OnboardingNextStepItem(
-                id: "import-sample",
-                systemImage: "tray.and.arrow.down.fill",
-                title: "Import a sample collection with a longer localized title",
-                description: "The description wraps across several lines so compact sheets and large accessibility sizes keep a stable rhythm.",
-                actionText: "Import sample data"),
-            OnboardingNextStepItem(
-                id: "invite-collaborators",
-                systemImage: "person.2.badge.gearshape.fill",
-                title: "Invite collaborators later from settings",
-                description: "A static recommendation can omit an action and still align with actionable rows.",
-                presentation: .sheet),
-        ]
-    }
     var primaryButtonText: Text {
         Text("Get started with all sample data and preferences")
     }
@@ -1252,9 +882,6 @@ private struct LongOnboardingPreviewContent: OnboardingContent {
         },
         primaryRouteDestination: { route in
             OnboardingPrimaryRoutePreviewDestination(route: route)
-        },
-        nextStepDestination: { step in
-            OnboardingNextStepPreviewDestination(step: step)
         })
 }
 
@@ -1267,9 +894,6 @@ private struct LongOnboardingPreviewContent: OnboardingContent {
         onSkip: {},
         primaryRouteDestination: { route in
             OnboardingPrimaryRoutePreviewDestination(route: route)
-        },
-        nextStepDestination: { step in
-            OnboardingNextStepPreviewDestination(step: step)
         })
         .onboardingBackground(.softGradient)
         .frame(width: 390, height: 740)
@@ -1284,9 +908,6 @@ private struct LongOnboardingPreviewContent: OnboardingContent {
         onSkip: {},
         primaryRouteDestination: { route in
             OnboardingPrimaryRoutePreviewDestination(route: route)
-        },
-        nextStepDestination: { step in
-            OnboardingNextStepPreviewDestination(step: step)
         })
         .onboardingBackground(.animatedMesh())
         .frame(width: 390, height: 740)
@@ -1301,9 +922,6 @@ private struct LongOnboardingPreviewContent: OnboardingContent {
         onSkip: {},
         primaryRouteDestination: { route in
             OnboardingPrimaryRoutePreviewDestination(route: route)
-        },
-        nextStepDestination: { step in
-            OnboardingNextStepPreviewDestination(step: step)
         })
         .frame(width: 320, height: 760)
 }
@@ -1317,9 +935,6 @@ private struct LongOnboardingPreviewContent: OnboardingContent {
         onSkip: {},
         primaryRouteDestination: { route in
             OnboardingPrimaryRoutePreviewDestination(route: route)
-        },
-        nextStepDestination: { step in
-            OnboardingNextStepPreviewDestination(step: step)
         })
         .frame(width: 390, height: 740)
 }
@@ -1333,36 +948,10 @@ private struct LongOnboardingPreviewContent: OnboardingContent {
         onSkip: {},
         primaryRouteDestination: { route in
             OnboardingPrimaryRoutePreviewDestination(route: route)
-        },
-        nextStepDestination: { step in
-            OnboardingNextStepPreviewDestination(step: step)
         })
         .frame(width: 390, height: 780)
         .preferredColorScheme(.dark)
         .dynamicTypeSize(.accessibility2)
-}
-
-private struct OnboardingNextStepPreviewDestination: View {
-    let step: OnboardingNextStepItem
-
-    var body: some View {
-        VStack(spacing: Tokens.Spacing.large) {
-            step.title
-                .font(.title2.weight(.bold))
-                .multilineTextAlignment(.center)
-
-            if let description = step.description {
-                description
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .frame(maxWidth: Tokens.Layout.contentMaxWidth)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(Tokens.Spacing.xLarge)
-        .navigationTitle("Next step")
-    }
 }
 
 private struct OnboardingPrimaryRoutePreviewDestination: View {

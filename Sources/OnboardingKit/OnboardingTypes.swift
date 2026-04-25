@@ -44,86 +44,6 @@ public struct OnboardingFeatureItem: Identifiable {
     }
 }
 
-public struct OnboardingNextStepItem: Identifiable {
-    public let id: String
-    public let image: Image?
-    public let title: Text
-    public let description: Text?
-    public let actionText: Text?
-    public let presentation: OnboardingNextStepPresentation
-
-    public init(
-        id: String,
-        image: Image? = nil,
-        title: Text,
-        description: Text? = nil,
-        actionText: Text? = nil,
-        presentation: OnboardingNextStepPresentation = .push)
-    {
-        self.id = id
-        self.image = image
-        self.title = title
-        self.description = description
-        self.actionText = actionText
-        self.presentation = presentation
-    }
-
-    public init(
-        id: String,
-        systemImage: String? = nil,
-        title: LocalizedStringResource,
-        description: LocalizedStringResource? = nil,
-        actionText: LocalizedStringResource? = nil,
-        presentation: OnboardingNextStepPresentation = .push)
-    {
-        self.id = id
-        self.image = systemImage.map { Image(systemName: $0) }
-        self.title = Text(title)
-        self.description = description.map { Text($0) }
-        self.actionText = actionText.map { Text($0) }
-        self.presentation = presentation
-    }
-
-    @available(*, deprecated, message: "Provide a stable id for routing, analytics, and SwiftUI identity.")
-    public init(
-        image: Image? = nil,
-        title: Text,
-        description: Text? = nil,
-        actionText: Text? = nil,
-        presentation: OnboardingNextStepPresentation = .push)
-    {
-        self.init(
-            id: UUID().uuidString,
-            image: image,
-            title: title,
-            description: description,
-            actionText: actionText,
-            presentation: presentation)
-    }
-
-    @available(*, deprecated, message: "Provide a stable id for routing, analytics, and SwiftUI identity.")
-    public init(
-        systemImage: String? = nil,
-        title: LocalizedStringResource,
-        description: LocalizedStringResource? = nil,
-        actionText: LocalizedStringResource? = nil,
-        presentation: OnboardingNextStepPresentation = .push)
-    {
-        self.init(
-            id: UUID().uuidString,
-            systemImage: systemImage,
-            title: title,
-            description: description,
-            actionText: actionText,
-            presentation: presentation)
-    }
-}
-
-public enum OnboardingNextStepPresentation: Equatable {
-    case push
-    case sheet
-}
-
 public struct OnboardingPrimaryRoute: Identifiable, Hashable {
     public let id: String
 
@@ -140,8 +60,6 @@ public protocol OnboardingContent {
     var primaryRoutes: [OnboardingPrimaryRoute] { get }
     var primaryRouteNextButtonText: Text { get }
     var primaryRouteDoneButtonText: Text { get }
-    var nextStepsTitle: Text? { get }
-    var nextSteps: [OnboardingNextStepItem] { get }
     var primaryButtonText: Text { get }
     var skipButtonText: Text? { get }
     var errorAlertTitle: Text { get }
@@ -154,7 +72,5 @@ public extension OnboardingContent {
     var primaryRoutes: [OnboardingPrimaryRoute] { [] }
     var primaryRouteNextButtonText: Text { Text("Next") }
     var primaryRouteDoneButtonText: Text { Text("Done") }
-    var nextStepsTitle: Text? { Text("Next steps") }
-    var nextSteps: [OnboardingNextStepItem] { [] }
     var skipButtonText: Text? { nil }
 }
