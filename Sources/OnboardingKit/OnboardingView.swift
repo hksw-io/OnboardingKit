@@ -179,6 +179,21 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                 self.nextStepDestination(for: presentedStep.step)
             }
         }
+        .alert(
+            self.content.errorAlertTitle,
+            isPresented: self.errorPresented,
+            actions: {
+                Button(role: .cancel) {
+                    self.errorMessage = nil
+                } label: {
+                    self.content.errorOKText
+                }
+            },
+            message: {
+                if let message = self.errorMessage {
+                    Text(message)
+                }
+            })
     }
 
     private var onboardingContent: some View {
@@ -285,21 +300,6 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         #if os(macOS)
             .frame(minWidth: Tokens.Layout.compactSheetMinWidth, minHeight: 620)
         #endif
-            .alert(
-                self.content.errorAlertTitle,
-                isPresented: self.errorPresented,
-                actions: {
-                    Button(role: .cancel) {
-                        self.errorMessage = nil
-                    } label: {
-                        self.content.errorOKText
-                    }
-                },
-                message: {
-                    if let message = self.errorMessage {
-                        Text(message)
-                    }
-                })
             .onAppear {
                 self.featuresVisible = true
             }

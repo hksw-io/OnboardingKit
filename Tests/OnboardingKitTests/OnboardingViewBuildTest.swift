@@ -219,6 +219,32 @@ struct OnboardingViewBuildTest {
     }
 
     @Test
+    func viewConstructsWithPrimaryRouteChainAndErrorMessage() {
+        struct PrimaryRouteErrorContent: OnboardingContent {
+            var title: Text { Text("Primary") }
+            var features: [OnboardingFeatureItem] {
+                [OnboardingFeatureItem(description: Text("One feature."))]
+            }
+            var primaryRoutes: [OnboardingPrimaryRoute] {
+                [OnboardingPrimaryRoute(id: "permissions")]
+            }
+            var primaryButtonText: Text { Text("Continue") }
+            var errorAlertTitle: Text { Text("Error") }
+            var errorOKText: Text { Text("OK") }
+        }
+
+        _ = OnboardingView(
+            content: PrimaryRouteErrorContent(),
+            isLoading: .constant(false),
+            errorMessage: .constant("Route failed"),
+            onPrimary: {},
+            onSkip: {},
+            primaryRouteDestination: { route in
+                Text(route.id)
+            })
+    }
+
+    @Test
     func primaryRouteStoresStableID() {
         let route = OnboardingPrimaryRoute(id: "sample-data")
 
