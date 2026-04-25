@@ -20,7 +20,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
     @State private var pushedNextSteps: [PresentedOnboardingNextStep] = []
     @State private var sheetNextStep: PresentedOnboardingNextStep?
     @State private var activePrimaryDestination = false
-    @State private var activePrimaryRouteIndex: Int?
+    @State private var activePrimaryRouteID: OnboardingPrimaryRoute.ID?
     @State private var routeTransitionDirection: OnboardingRouteTransitionDirection = .forward
 
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = Tokens.Platform.iconSize
@@ -212,21 +212,19 @@ public struct OnboardingView<Content: OnboardingContent>: View {
 
     private var onboardingContent: some View {
         ZStack {
-            if let activePrimaryRouteIndex = self.activePrimaryRouteIndex,
-               self.content.primaryRoutes.indices.contains(activePrimaryRouteIndex),
+            if let activePrimaryRoute = self.activePrimaryRoute,
                let primaryRouteDestination = self.primaryRouteDestination
             {
-                let route = self.content.primaryRoutes[activePrimaryRouteIndex]
                 OnboardingPrimaryRouteDestinationContainer(
                     content: self.content,
-                    destination: primaryRouteDestination(route),
-                    index: activePrimaryRouteIndex,
+                    destination: primaryRouteDestination(activePrimaryRoute.route),
+                    index: activePrimaryRoute.index,
                     count: self.content.primaryRoutes.count,
                     onNext: {
-                        self.openPrimaryRoute(after: activePrimaryRouteIndex)
+                        self.openPrimaryRoute(after: activePrimaryRoute.index)
                     },
                     onDone: self.completePrimaryRoutes)
-                    .id("primary-route-\(activePrimaryRouteIndex)")
+                    .id("primary-route-\(activePrimaryRoute.route.id)")
                     .transition(self.routeTransition)
             } else if self.activePrimaryDestination, let primaryDestination = self.primaryDestination {
                 OnboardingPrimaryDestinationContainer(
@@ -328,6 +326,9 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         let presentedStep = PresentedOnboardingNextStep(step: step)
         switch step.presentation {
         case .push:
+            guard self.pushedNextSteps.last?.id != presentedStep.id else {
+                return
+            }
             self.pushedNextSteps.append(presentedStep)
         case .sheet:
             self.sheetNextStep = presentedStep
@@ -341,7 +342,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
             self.routeTransitionDirection = .forward
             withAnimation(self.routeAnimation) {
                 self.activePrimaryDestination = false
-                self.activePrimaryRouteIndex = 0
+                self.activePrimaryRouteID = self.content.primaryRoutes.first?.id
             }
             return
         }
@@ -374,7 +375,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
 
         self.routeTransitionDirection = .forward
         withAnimation(self.routeAnimation) {
-            self.activePrimaryRouteIndex = nextIndex
+            self.activePrimaryRouteID = self.content.primaryRoutes[nextIndex].id
         }
     }
 
@@ -382,8 +383,20 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         self.onPrimaryRoutesComplete()
         self.routeTransitionDirection = .backward
         withAnimation(self.routeAnimation) {
-            self.activePrimaryRouteIndex = nil
+            self.activePrimaryRouteID = nil
         }
+    }
+
+    private var activePrimaryRoute: (index: Int, route: OnboardingPrimaryRoute)? {
+        guard let activePrimaryRouteID else {
+            return nil
+        }
+
+        guard let index = self.content.primaryRoutes.firstIndex(where: { $0.id == activePrimaryRouteID }) else {
+            return nil
+        }
+
+        return (index, self.content.primaryRoutes[index])
     }
 
     private var routeTransition: AnyTransition {
@@ -408,8 +421,8 @@ public struct OnboardingView<Content: OnboardingContent>: View {
     }
 
     private var primaryRoutePhaseID: String {
-        if let activePrimaryRouteIndex = self.activePrimaryRouteIndex {
-            return "route-\(activePrimaryRouteIndex)"
+        if let activePrimaryRouteID = self.activePrimaryRouteID {
+            return "route-\(activePrimaryRouteID)"
         }
 
         return self.activePrimaryDestination ? "single" : "overview"
@@ -434,8 +447,13 @@ private enum OnboardingRouteTransitionDirection {
 }
 
 private struct PresentedOnboardingNextStep: Identifiable, Hashable {
-    let id = UUID()
+    let id: OnboardingNextStepItem.ID
     let step: OnboardingNextStepItem
+
+    init(step: OnboardingNextStepItem) {
+        self.id = step.id
+        self.step = step
+    }
 
     static func == (lhs: PresentedOnboardingNextStep, rhs: PresentedOnboardingNextStep) -> Bool {
         lhs.id == rhs.id
