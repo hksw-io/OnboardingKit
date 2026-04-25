@@ -185,6 +185,19 @@ struct OnboardingViewBuildTest {
     }
 
     @Test
+    func revealDelayStartsWithBaseDelay() {
+        #expect(Tokens.Motion.revealDelay(for: 0) == Tokens.Motion.featureBaseDelay)
+    }
+
+    @Test
+    func revealDelayCapsLongLists() {
+        let expectedDelay = Tokens.Motion.featureBaseDelay + Tokens.Motion.maxFeatureStaggerDelay
+        let actualDelay = Tokens.Motion.revealDelay(for: 100)
+
+        #expect(abs(actualDelay - expectedDelay) < 0.0001)
+    }
+
+    @Test
     func scrollEdgeFadeQuantizesOpacity() {
         let opacity = ScrollEdgeFade.opacity(
             contentHeight: 1_000,

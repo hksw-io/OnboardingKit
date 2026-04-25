@@ -672,7 +672,7 @@ private struct OnboardingFeatureRow: View {
     let reduceMotion: Bool
 
     var body: some View {
-        let delay = Tokens.Motion.featureBaseDelay + (Double(index) * Tokens.Motion.featureStaggerDelay)
+        let delay = Tokens.Motion.revealDelay(for: self.index)
         let isVisible = self.featuresVisible
 
         HStack(alignment: .top, spacing: Tokens.Spacing.large) {
@@ -766,7 +766,7 @@ private struct OnboardingNextStepRow: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
-        let delay = Tokens.Motion.featureBaseDelay + (Double(self.index) * Tokens.Motion.featureStaggerDelay)
+        let delay = Tokens.Motion.revealDelay(for: self.index)
 
         Group {
             if self.isActionable {
