@@ -24,7 +24,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
     @State private var activePrimaryDestination = false
     @State private var activePrimaryRouteID: OnboardingPrimaryRoute.ID?
     @State private var routeTransitionDirection: OnboardingRouteTransitionDirection = .forward
-    @State private var footerHeight: CGFloat = 0
+    @State private var footerFrame: FooterMaskFrame = .zero
 
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = Tokens.Platform.iconSize
     @ScaledMetric(relativeTo: .body) private var featureIconSize: CGFloat = Tokens.Platform.featureIconSize
@@ -296,15 +296,18 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, self.horizontalPadding(for: geometry.size.width))
                 .padding(.top, self.topPadding)
-                .padding(.bottom, self.bottomPadding)
+                .padding(
+                    .bottom,
+                    self.bottomPadding + FooterMaskMetrics.contentBottomInset(
+                        containerHeight: geometry.size.height,
+                        footerFrame: self.footerFrame))
             }
             .scrollBounceBehavior(.basedOnSize)
             .onScrollGeometryChange(for: Double.self) { geometry in
                 ScrollEdgeFade.opacity(
                     contentHeight: geometry.contentSize.height,
-                    contentBottomInset: geometry.contentInsets.bottom,
                     visibleMaxY: geometry.visibleRect.maxY,
-                    fadeHeight: self.scrollEdgeFadeHeight)
+                    fadeHeight: self.resolvedScrollEdgeFadeHeight)
             } action: { _, newOpacity in
                 if self.scrollEdgeFadeOpacity != newOpacity {
                     self.scrollEdgeFadeOpacity = newOpacity
@@ -312,11 +315,12 @@ public struct OnboardingView<Content: OnboardingContent>: View {
             }
             .mask {
                 FooterContentMask(
-                    footerHeight: self.footerHeight,
-                    fadeHeight: self.scrollEdgeFadeHeight,
+                    containerHeight: geometry.size.height,
+                    footerFrame: self.footerFrame,
+                    fadeHeight: self.resolvedScrollEdgeFadeHeight,
                     scrollEdgeFadeOpacity: self.scrollEdgeFadeOpacity)
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
+            .overlay(alignment: .bottom) {
                 ZStack {
                     OnboardingFooterSection(
                         content: self.content,
@@ -327,16 +331,18 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                         .frame(maxWidth: Tokens.Layout.contentMaxWidth)
                         .padding(.horizontal, self.horizontalPadding(for: geometry.size.width))
                 }
-                .onGeometryChange(for: CGFloat.self) { geometry in
-                    FooterMaskMetrics.quantizedHeight(geometry.size.height)
-                } action: { newHeight in
-                    if self.footerHeight != newHeight {
-                        self.footerHeight = newHeight
+                .onGeometryChange(for: FooterMaskFrame.self) { geometry in
+                    FooterMaskMetrics.quantizedFrame(
+                        geometry.frame(in: .named(FooterMaskMetrics.coordinateSpaceName)))
+                } action: { newFrame in
+                    if self.footerFrame != newFrame {
+                        self.footerFrame = newFrame
                     }
                 }
                 .frame(maxWidth: .infinity)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
+            .coordinateSpace(.named(FooterMaskMetrics.coordinateSpaceName))
         }
         #if os(macOS)
             .frame(minWidth: Tokens.Layout.compactSheetMinWidth, minHeight: 620)
@@ -466,6 +472,10 @@ public struct OnboardingView<Content: OnboardingContent>: View {
             breakpoint: Tokens.Layout.compactWidthBreakpoint)
     }
 
+    private var resolvedScrollEdgeFadeHeight: CGFloat {
+        FooterMaskMetrics.resolvedFadeHeight(self.scrollEdgeFadeHeight)
+    }
+
     private var errorPresented: Binding<Bool> {
         Binding(
             get: { self.errorMessage != nil },
@@ -491,7 +501,6 @@ enum ScrollEdgeFade {
 
     static func opacity(
         contentHeight: CGFloat,
-        contentBottomInset: CGFloat,
         visibleMaxY: CGFloat,
         fadeHeight: CGFloat) -> Double
     {
@@ -499,8 +508,7 @@ enum ScrollEdgeFade {
             return 1
         }
 
-        let contentBottom = contentHeight + contentBottomInset
-        let distance = contentBottom - visibleMaxY
+        let distance = contentHeight - visibleMaxY
         let rawOpacity = Double(min(1, max(0, distance / fadeHeight)))
         return self.quantize(rawOpacity)
     }
@@ -515,7 +523,15 @@ enum ScrollEdgeFade {
 }
 
 enum FooterMaskMetrics {
+    static let coordinateSpaceName = "OnboardingFooterMask"
     static let heightStep: CGFloat = 1
+    static let maximumFadeHeight: CGFloat = 28
+
+    static func quantizedFrame(_ frame: CGRect, step: CGFloat = Self.heightStep) -> FooterMaskFrame {
+        FooterMaskFrame(
+            minY: self.quantizedHeight(frame.minY, step: step),
+            height: self.quantizedHeight(frame.height, step: step))
+    }
 
     static func quantizedHeight(_ height: CGFloat, step: CGFloat = Self.heightStep) -> CGFloat {
         guard height > 0, step > 0 else {
@@ -525,34 +541,105 @@ enum FooterMaskMetrics {
         return (height / step).rounded() * step
     }
 
+    static func resolvedFadeHeight(_ fadeHeight: CGFloat, maximum: CGFloat = Self.maximumFadeHeight) -> CGFloat {
+        guard fadeHeight > 0, maximum > 0 else {
+            return 0
+        }
+
+        return min(fadeHeight, maximum)
+    }
+
+    static func layout(
+        containerHeight: CGFloat,
+        footerFrame: FooterMaskFrame,
+        fadeHeight: CGFloat,
+        scrollEdgeFadeOpacity: Double) -> FooterMaskLayout
+    {
+        guard containerHeight > 0, footerFrame.isMeasured else {
+            return FooterMaskLayout(
+                opaqueHeight: max(0, containerHeight),
+                fadeHeight: 0,
+                clearHeight: 0,
+                fadeBottomOpacity: 1)
+        }
+
+        let footerMinY = min(max(0, footerFrame.minY), containerHeight)
+        let resolvedFadeHeight = min(max(0, fadeHeight), footerMinY)
+        let clearHeight = self.contentBottomInset(
+            containerHeight: containerHeight,
+            footerFrame: footerFrame)
+
+        return FooterMaskLayout(
+            opaqueHeight: max(0, footerMinY - resolvedFadeHeight),
+            fadeHeight: resolvedFadeHeight,
+            clearHeight: clearHeight,
+            fadeBottomOpacity: self.fadeBottomOpacity(scrollEdgeFadeOpacity: scrollEdgeFadeOpacity))
+    }
+
+    static func contentBottomInset(containerHeight: CGFloat, footerFrame: FooterMaskFrame) -> CGFloat {
+        guard containerHeight > 0, footerFrame.isMeasured else {
+            return 0
+        }
+
+        let footerMinY = min(max(0, footerFrame.minY), containerHeight)
+        return max(0, containerHeight - footerMinY)
+    }
+
     static func fadeBottomOpacity(scrollEdgeFadeOpacity: Double) -> Double {
         1 - min(1, max(0, scrollEdgeFadeOpacity))
     }
 }
 
+struct FooterMaskFrame: Equatable {
+    static let zero = Self(minY: 0, height: 0)
+
+    let minY: CGFloat
+    let height: CGFloat
+
+    var isMeasured: Bool {
+        self.height > 0
+    }
+}
+
+struct FooterMaskLayout: Equatable {
+    let opaqueHeight: CGFloat
+    let fadeHeight: CGFloat
+    let clearHeight: CGFloat
+    let fadeBottomOpacity: Double
+}
+
 private struct FooterContentMask: View {
-    let footerHeight: CGFloat
+    let containerHeight: CGFloat
+    let footerFrame: FooterMaskFrame
     let fadeHeight: CGFloat
     let scrollEdgeFadeOpacity: Double
 
     var body: some View {
+        let layout = FooterMaskMetrics.layout(
+            containerHeight: self.containerHeight,
+            footerFrame: self.footerFrame,
+            fadeHeight: self.fadeHeight,
+            scrollEdgeFadeOpacity: self.scrollEdgeFadeOpacity)
+
         VStack(spacing: 0) {
             Rectangle()
                 .fill(.black)
+                .frame(height: layout.opaqueHeight)
 
-            LinearGradient(
-                colors: [
-                    .black,
-                    .black.opacity(FooterMaskMetrics.fadeBottomOpacity(
-                        scrollEdgeFadeOpacity: self.scrollEdgeFadeOpacity)),
-                ],
-                startPoint: .top,
-                endPoint: .bottom)
-                .frame(height: max(0, self.fadeHeight))
+            if layout.fadeHeight > 0 {
+                LinearGradient(
+                    colors: [
+                        .black,
+                        .black.opacity(layout.fadeBottomOpacity),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom)
+                    .frame(height: layout.fadeHeight)
+            }
 
             Rectangle()
                 .fill(.clear)
-                .frame(height: max(0, self.footerHeight))
+                .frame(height: layout.clearHeight)
         }
     }
 }
