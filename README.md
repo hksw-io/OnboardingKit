@@ -150,7 +150,7 @@ Built-in options:
 
 Destination views can still draw their own backgrounds. If they do, that local destination background appears above the onboarding background.
 
-Custom and gradient backgrounds span behind the pinned footer and button area. The default `.system` background keeps the standard opaque footer surface.
+Every background spans behind the pinned footer and button area, including `.system`.
 
 ## Styling
 

@@ -234,12 +234,12 @@ struct OnboardingViewBuildTest {
     }
 
     @Test
-    func systemBackgroundKeepsOpaqueFooterSurface() {
-        #expect(!OnboardingBackground.system.spansBehindFooter)
+    func systemBackgroundSpansBehindFooterSurface() {
+        #expect(OnboardingBackground.system.spansBehindFooter)
     }
 
     @Test
-    func customBackgroundsSpanBehindFooterSurface() {
+    func customAndGradientBackgroundsSpanBehindFooterSurface() {
         #expect(OnboardingBackground.softGradient.spansBehindFooter)
         #expect(OnboardingBackground.linearGradient(colors: [.blue, .mint]).spansBehindFooter)
         #expect(OnboardingBackground.animatedMesh().spansBehindFooter)

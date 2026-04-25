@@ -50,24 +50,16 @@ public struct OnboardingBackground {
 }
 
 extension OnboardingBackground {
-    var isSystem: Bool {
-        if case .system = self.storage {
-            return true
-        }
-
-        return false
-    }
-
     var spansBehindFooter: Bool {
-        !self.isSystem
+        true
     }
 
     var footerSurfaceStyle: AnyShapeStyle {
-        self.spansBehindFooter ? AnyShapeStyle(.clear) : AnyShapeStyle(Tokens.background)
+        AnyShapeStyle(.clear)
     }
 
     var footerFadeEndColor: Color {
-        self.spansBehindFooter ? .clear : Tokens.background
+        .clear
     }
 
     func makeView(context: OnboardingBackgroundContext) -> AnyView {
