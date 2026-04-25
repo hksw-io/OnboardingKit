@@ -553,8 +553,6 @@ private struct OnboardingPrimaryRouteDestinationContainer<Content: OnboardingCon
                 self.destination
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                Divider()
-
                 Button {
                     self.isLastRoute ? self.onDone() : self.onNext()
                 } label: {
