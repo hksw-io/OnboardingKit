@@ -83,7 +83,6 @@ public protocol OnboardingContent {
     var subtitle: Text? { get }
     var features: [OnboardingFeatureItem] { get }
     var primaryRoutes: [OnboardingPrimaryRoute] { get }
-    var primaryRouteBackButtonText: Text { get }
     var primaryRouteNextButtonText: Text { get }
     var primaryRouteDoneButtonText: Text { get }
     var nextStepsTitle: Text? { get }
@@ -98,7 +97,6 @@ public extension OnboardingContent {
     var appIcon: Image? { nil }
     var subtitle: Text? { nil }
     var primaryRoutes: [OnboardingPrimaryRoute] { [] }
-    var primaryRouteBackButtonText: Text { Text("Back") }
     var primaryRouteNextButtonText: Text { Text("Next") }
     var primaryRouteDoneButtonText: Text { Text("Done") }
     var nextStepsTitle: Text? { Text("Next steps") }

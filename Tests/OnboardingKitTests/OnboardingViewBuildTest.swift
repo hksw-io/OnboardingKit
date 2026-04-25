@@ -170,7 +170,6 @@ struct OnboardingViewBuildTest {
                 [OnboardingFeatureItem(description: Text("One feature."))]
             }
             var primaryButtonText: Text { Text("Continue") }
-            var primaryRouteBackButtonText: Text { Text("Overview") }
             var errorAlertTitle: Text { Text("Error") }
             var errorOKText: Text { Text("OK") }
         }
@@ -201,7 +200,6 @@ struct OnboardingViewBuildTest {
                 ]
             }
             var primaryButtonText: Text { Text("Continue") }
-            var primaryRouteBackButtonText: Text { Text("Overview") }
             var primaryRouteNextButtonText: Text { Text("Next step") }
             var primaryRouteDoneButtonText: Text { Text("Finish") }
             var errorAlertTitle: Text { Text("Error") }

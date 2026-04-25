@@ -62,7 +62,6 @@ struct MyOnboarding: OnboardingContent {
         ]
     }
     var primaryButtonText: Text { Text("Get started") }
-    var primaryRouteBackButtonText: Text { Text("Overview") }
     var primaryRouteDoneButtonText: Text { Text("Finish") }
     var skipButtonText: Text? { Text("Skip for now") }
     var errorAlertTitle: Text { Text("Something went wrong") }
@@ -119,7 +118,7 @@ The view is purely presentational:
 - `isLoading: Binding<Bool>` — when `true`, the primary button shows a progress spinner and both buttons are disabled.
 - `errorMessage: Binding<String?>` — when non-nil, the view presents an alert. Setting it back to `nil` (or letting the user tap the OK button) dismisses the alert.
 - `onPrimary` / `onSkip` — fired on tap. Your state layer handles the rest.
-- `primaryRoutes` / `primaryRouteDestination` — optional chained follow-up routes opened by the primary button with in-sheet slide transitions. The package supplies Back, Next, and Done controls.
+- `primaryRoutes` / `primaryRouteDestination` — optional chained follow-up routes opened by the primary button with in-sheet slide transitions. The package supplies Next and Done controls.
 - `primaryDestination` — convenience API for a single follow-up route. `onPrimary` still fires before the route opens.
 - `nextSteps` / `nextStepDestination` — optional follow-up routes inside onboarding. Give each step a stable `id`; use `presentation: .push` for an in-flow route or `.sheet` for a focused setup sheet.
 - `onNextStep` — optional hook fired before the route or sheet opens, useful for analytics or app state.

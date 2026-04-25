@@ -190,13 +190,9 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                 let route = self.content.primaryRoutes[activePrimaryRouteIndex]
                 OnboardingPrimaryRouteDestinationContainer(
                     content: self.content,
-                    route: route,
                     destination: primaryRouteDestination(route),
                     index: activePrimaryRouteIndex,
                     count: self.content.primaryRoutes.count,
-                    onBack: {
-                        self.openPrimaryRoute(before: activePrimaryRouteIndex)
-                    },
                     onNext: {
                         self.openPrimaryRoute(after: activePrimaryRouteIndex)
                     },
@@ -205,9 +201,7 @@ public struct OnboardingView<Content: OnboardingContent>: View {
                     .transition(self.routeTransition)
             } else if self.activePrimaryDestination, let primaryDestination = self.primaryDestination {
                 OnboardingPrimaryDestinationContainer(
-                    content: self.content,
-                    destination: primaryDestination(),
-                    onBack: self.closePrimaryDestination)
+                    destination: primaryDestination())
                     .id("primary-destination")
                     .transition(self.routeTransition)
             } else {
@@ -358,13 +352,6 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         }
     }
 
-    private func closePrimaryDestination() {
-        self.routeTransitionDirection = .backward
-        withAnimation(self.routeAnimation) {
-            self.activePrimaryDestination = false
-        }
-    }
-
     private func openPrimaryRoute(after index: Int) {
         let nextIndex = index + 1
         guard self.content.primaryRoutes.indices.contains(nextIndex) else {
@@ -375,19 +362,6 @@ public struct OnboardingView<Content: OnboardingContent>: View {
         self.routeTransitionDirection = .forward
         withAnimation(self.routeAnimation) {
             self.activePrimaryRouteIndex = nextIndex
-        }
-    }
-
-    private func openPrimaryRoute(before index: Int) {
-        let previousIndex = index - 1
-        self.routeTransitionDirection = .backward
-
-        withAnimation(self.routeAnimation) {
-            if self.content.primaryRoutes.indices.contains(previousIndex) {
-                self.activePrimaryRouteIndex = previousIndex
-            } else {
-                self.activePrimaryRouteIndex = nil
-            }
         }
     }
 
@@ -459,37 +433,11 @@ private struct PresentedOnboardingNextStep: Identifiable, Hashable {
     }
 }
 
-private struct OnboardingPrimaryDestinationContainer<Content: OnboardingContent, Destination: View>: View {
-    let content: Content
+private struct OnboardingPrimaryDestinationContainer<Destination: View>: View {
     let destination: Destination
-    let onBack: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Button {
-                    self.onBack()
-                } label: {
-                    Label {
-                        self.content.primaryRouteBackButtonText
-                    } icon: {
-                        Image(systemName: "chevron.left")
-                    }
-                    .font(.subheadline.weight(.semibold))
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.tint)
-
-                Spacer(minLength: 0)
-            }
-            .frame(maxWidth: Tokens.Layout.contentMaxWidth)
-            .padding(.horizontal, Tokens.Layout.regularHorizontalPadding)
-            .padding(.vertical, Tokens.Spacing.medium)
-            .frame(maxWidth: .infinity)
-            .background(Tokens.background)
-
-            Divider()
-
             self.destination
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -502,45 +450,14 @@ private struct OnboardingPrimaryDestinationContainer<Content: OnboardingContent,
 
 private struct OnboardingPrimaryRouteDestinationContainer<Content: OnboardingContent, Destination: View>: View {
     let content: Content
-    let route: OnboardingPrimaryRoute
     let destination: Destination
     let index: Int
     let count: Int
-    let onBack: () -> Void
     let onNext: () -> Void
     let onDone: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Button {
-                    self.onBack()
-                } label: {
-                    Label {
-                        self.content.primaryRouteBackButtonText
-                    } icon: {
-                        Image(systemName: "chevron.left")
-                    }
-                    .font(.subheadline.weight(.semibold))
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.tint)
-
-                Spacer(minLength: Tokens.Spacing.medium)
-
-                Text("\(self.index + 1) / \(self.count)")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .accessibilityLabel(Text("Step \(self.index + 1) of \(self.count)"))
-            }
-            .frame(maxWidth: Tokens.Layout.contentMaxWidth)
-            .padding(.horizontal, Tokens.Layout.regularHorizontalPadding)
-            .padding(.vertical, Tokens.Spacing.medium)
-            .frame(maxWidth: .infinity)
-            .background(Tokens.background)
-
-            Divider()
-
             self.destination
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -938,7 +855,6 @@ private struct OnboardingPreviewContent: OnboardingContent {
         ]
     }
     var primaryButtonText: Text { Text("Get started") }
-    var primaryRouteBackButtonText: Text { Text("Overview") }
     var primaryRouteDoneButtonText: Text { Text("Finish") }
     var skipButtonText: Text? { Text("Skip for now") }
     var errorAlertTitle: Text { Text("Something went wrong") }
