@@ -7,15 +7,23 @@ Pure SwiftUI — the consumer owns state (loading, error, dismissal). Works with
 ## Requirements
 
 - iOS 26+ / macOS 26+
-- Swift 6.0+
+- Swift 6.2+
 
 ## Installation
+
+No release tags are published yet, so use the `master` branch for now:
+
+```swift
+.package(url: "https://github.com/hksw-io/OnboardingKit.git", branch: "master")
+```
+
+Switch to a semantic version requirement after the first release tag exists:
 
 ```swift
 .package(url: "https://github.com/hksw-io/OnboardingKit.git", from: "1.0.0")
 ```
 
-Or in Xcode: **File > Add Package Dependencies** and enter the URL above.
+Or in Xcode: **File > Add Package Dependencies**, enter the URL above, and select the `master` branch until a release tag is available.
 
 ## Usage
 
@@ -78,7 +86,7 @@ struct RootView: View {
             content: MyOnboarding(),
             isLoading: $isLoading,
             errorMessage: $errorMessage,
-            onPrimary: { /* create sample data, then dismiss */ },
+            onPrimary: { /* analytics or setup before routes open */ },
             onSkip: { /* mark onboarding complete, dismiss */ },
             onNextStep: { step in
                 /* analytics or state updates before presentation */
@@ -112,6 +120,12 @@ struct RootView: View {
 }
 ```
 
+For a simple onboarding sheet, omit `primaryRoutes`, `primaryRouteDestination`, `nextSteps`, and `nextStepDestination`. The primary and skip callbacks can then dismiss the sheet directly.
+
+For a chained setup flow, provide `primaryRoutes` and `primaryRouteDestination`. `onPrimary` fires first, then the library opens the first route with an in-sheet transition. Do not dismiss from `onPrimary` when using a route chain. Finish in `onPrimaryRoutesComplete` after the last route.
+
+For optional follow-up actions, provide `nextSteps` and `nextStepDestination`. Use `presentation: .push` to keep the user in the current onboarding flow, or `.sheet` for a focused setup task.
+
 ## State ownership
 
 The view is purely presentational:
@@ -125,6 +139,23 @@ The view is purely presentational:
 - `primaryDestination` — convenience API for a single follow-up route. `onPrimary` still fires before the route opens.
 - `nextSteps` / `nextStepDestination` — optional follow-up routes inside onboarding. Give each step a stable `id`; use `presentation: .push` for an in-flow route or `.sheet` for a focused setup sheet.
 - `onNextStep` — optional hook fired before the route or sheet opens, useful for analytics or app state.
+
+Route navigation state is intentionally transient and owned inside `OnboardingView`; persist only completed setup state in your app. Destination builders are generic at the public API and type-erased internally so call sites can return different SwiftUI views without exposing that plumbing.
+
+## Local development
+
+Run the package tests from the package root:
+
+```sh
+swift test
+```
+
+In the local `hksw` workspace, preview both libraries with the sibling preview host:
+
+```sh
+cd ../PreviewHost
+swift run
+```
 
 ## License
 
