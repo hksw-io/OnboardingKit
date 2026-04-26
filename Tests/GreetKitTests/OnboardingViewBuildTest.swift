@@ -301,6 +301,14 @@ struct OnboardingViewBuildTest {
     }
 
     @Test
+    func styleProvidesCustomPrimaryButtonSurface() {
+        let style = OnboardingStyle(tint: .indigo, primaryButtonForegroundColor: .white)
+
+        _ = style.primaryButtonBackgroundStyle
+        _ = style.primaryButtonForegroundStyle
+    }
+
+    @Test
     func animatedGradientCentersAreStableWithReduceMotion() {
         let first = OnboardingAnimatedGradientMotion.centers(
             phase: 0,

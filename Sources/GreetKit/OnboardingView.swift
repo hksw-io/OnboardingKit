@@ -570,18 +570,18 @@ private struct OnboardingPrimaryRouteDestinationContainer<Content: OnboardingCon
                         .font(.body.weight(.semibold))
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                        .onboardingOptionalForegroundStyle(self.style.primaryButtonForegroundColor)
+                        .foregroundStyle(self.style.primaryButtonForegroundStyle)
                         .frame(maxWidth: .infinity, minHeight: Tokens.Layout.buttonLabelMinHeight)
                         .padding(.vertical, Tokens.Platform.buttonVerticalPadding)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.plain)
                 .controlSize(.extraLarge)
-                #if os(macOS)
-                    .environment(\.controlActiveState, .key)
-                    .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.large))
-                #else
-                    .glassEffect(in: .rect(cornerRadius: Tokens.Radius.large))
-                #endif
+                .background {
+                    RoundedRectangle(cornerRadius: Tokens.Radius.large, style: .continuous)
+                        .fill(self.style.primaryButtonBackgroundStyle)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.large, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.large, style: .continuous))
                 .frame(maxWidth: Tokens.Layout.contentMaxWidth)
                 .padding(.horizontal, self.horizontalPadding(for: geometry.size.width))
                 .padding(.vertical, Tokens.Layout.footerVerticalPadding)
@@ -742,7 +742,7 @@ private struct OnboardingFooterSection<Content: OnboardingContent>: View {
                         .font(.body.weight(.semibold))
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                        .onboardingOptionalForegroundStyle(self.style.primaryButtonForegroundColor)
+                        .foregroundStyle(self.style.primaryButtonForegroundStyle)
                         .opacity(self.isLoading ? 0 : 1)
 
                     HStack(spacing: Tokens.Spacing.small) {
@@ -754,7 +754,7 @@ private struct OnboardingFooterSection<Content: OnboardingContent>: View {
                             .font(.body.weight(.semibold))
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
-                            .onboardingOptionalForegroundStyle(self.style.primaryButtonForegroundColor)
+                            .foregroundStyle(self.style.primaryButtonForegroundStyle)
                     }
                     .opacity(self.isLoading ? 1 : 0)
                 }
@@ -764,15 +764,16 @@ private struct OnboardingFooterSection<Content: OnboardingContent>: View {
                 .accessibilityLabel(self.content.primaryButtonText)
                 .accessibilityValue(self.isLoading ? Text("Loading") : Text(""))
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.plain)
             .controlSize(.extraLarge)
             .disabled(self.isLoading)
-            #if os(macOS)
-                .environment(\.controlActiveState, .key)
-                .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.large))
-            #else
-                .glassEffect(in: .rect(cornerRadius: Tokens.Radius.large))
-            #endif
+            .background {
+                RoundedRectangle(cornerRadius: Tokens.Radius.large, style: .continuous)
+                    .fill(self.style.primaryButtonBackgroundStyle)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.large, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.large, style: .continuous))
+            .opacity(self.isLoading ? 0.65 : 1)
 
             if let skipText = self.content.skipButtonText {
                 Button {
