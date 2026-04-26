@@ -224,13 +224,6 @@ Run the package tests from the package root:
 swift test
 ```
 
-In the local `hksw` workspace, preview both libraries with the sibling preview host:
-
-```sh
-cd ../PreviewHost
-swift run
-```
-
 ## License
 
 Private. Copyright © HK Softworks.
