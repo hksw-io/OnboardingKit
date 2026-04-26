@@ -226,4 +226,4 @@ swift test
 
 ## License
 
-Private. Copyright © HK Softworks.
+MIT. See [LICENSE](LICENSE).
