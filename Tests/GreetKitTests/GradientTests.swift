@@ -78,54 +78,37 @@ struct GradientTests {
     }
 
     @Test
-    func paletteReusesLightTonesWhenDarkIsOmitted() {
-        let palette = GreetGradientPalette(
-            light: .init(base: .white, primary: .pink, secondary: .orange, accent: .yellow))
+    func tonesAreDeeperInDarkModeThanInLight() {
+        let light = GreetGradientTones(brand: .indigo, colorScheme: .light)
+        let dark = GreetGradientTones(brand: .indigo, colorScheme: .dark)
 
-        #expect(palette.tones(for: .light).primary == .pink)
-        #expect(palette.tones(for: .dark).primary == .pink)
-        #expect(palette.tones(for: .dark).base == .white)
-    }
-
-    @Test
-    func paletteSelectsTonesPerColorScheme() {
-        let palette = GreetGradientPalette(
-            light: .init(base: .white, primary: .pink, secondary: .orange, accent: .yellow),
-            dark: .init(base: .black, primary: .purple, secondary: .blue, accent: .mint))
-
-        #expect(palette.tones(for: .light).primary == .pink)
-        #expect(palette.tones(for: .light).base == .white)
-        #expect(palette.tones(for: .dark).primary == .purple)
-        #expect(palette.tones(for: .dark).base == .black)
-    }
-
-    @Test
-    func brandPaletteCarriesTheBrandColorIntoBothSchemes() {
-        let palette = GreetGradientPalette.brand(.indigo)
-
-        #expect(palette.tones(for: .light).primary == .indigo)
-        #expect(palette.tones(for: .dark).primary == .indigo)
+        #expect(light.primary == .indigo)
+        #expect(dark.primary == .indigo)
+        #expect(light.secondary != dark.secondary)
+        #expect(light.accent != dark.accent)
     }
 
     /// Supporting tones used to be fixed hues — `.cyan` and `.mint` regardless of brand — so the
     /// field read as three unrelated colours. They are now washed from the brand itself.
     @Test
-    func brandPaletteDerivesSupportingTonesFromTheBrand() {
-        let red = GreetGradientPalette.brand(.red)
-        let blue = GreetGradientPalette.brand(.blue)
+    func supportingTonesAreDerivedFromTheBrand() {
+        let red = GreetGradientTones(brand: .red, colorScheme: .light)
+        let blue = GreetGradientTones(brand: .blue, colorScheme: .light)
 
-        #expect(red.light.secondary != blue.light.secondary)
-        #expect(red.light.accent != blue.light.accent)
-        #expect(red.dark.secondary != blue.dark.secondary)
-        #expect(red.dark.accent != blue.dark.accent)
-
-        #expect(red.light.secondary != Color.cyan)
-        #expect(red.light.accent != Color.mint)
+        #expect(red.secondary != blue.secondary)
+        #expect(red.accent != blue.accent)
+        #expect(red.secondary != Color.cyan)
+        #expect(red.accent != Color.mint)
     }
 
+    /// A background's own `brand:` wins over the style tint, which wins over the default.
     @Test
-    func standardPaletteUsesTheDefaultBrandColor() {
-        #expect(GreetGradientPalette.standard.tones(for: .light).primary == .blue)
+    func contextResolvesTheBrandColorInPrecedenceOrder() {
+        let styled = GreetBackgroundContext(reduceMotion: false, brandColor: .pink)
+
+        #expect(styled.tones(brand: .green).primary == .green)
+        #expect(styled.tones(brand: nil).primary == .pink)
+        #expect(GreetBackgroundContext(reduceMotion: false).tones(brand: nil).primary == .blue)
     }
 
     @Test

@@ -30,6 +30,13 @@ extension GreetBackgroundContext {
             reduceTransparency: self.reduceTransparency,
             increaseContrast: self.colorSchemeContrast == .increased)
     }
+
+    /// A background's own `brand:` wins over the style tint, which wins over the default blue.
+    func tones(brand: Color?) -> GreetGradientTones {
+        GreetGradientTones(
+            brand: brand ?? self.brandColor ?? .blue,
+            colorScheme: self.colorScheme)
+    }
 }
 
 /// Whether the person has asked for a background that competes less with the text on top of it.
@@ -53,54 +60,29 @@ struct GreetGradientAccessibility: Equatable, Sendable {
     }
 }
 
-public struct GreetGradientPalette: Sendable {
-    public struct Tones: Sendable {
-        public var base: Color
-        public var primary: Color
-        public var secondary: Color
-        public var accent: Color
+/// The four colours a built-in gradient composites, derived from one brand colour.
+///
+/// The brand colour becomes `primary`, and the supporting tones are that same colour washed
+/// toward the platform surface, so the field reads as one colour rather than as three unrelated
+/// hues. Because the surface is light in light mode and dark in dark mode, the same wash lifts the
+/// palette in one and deepens it in the other.
+///
+/// Dark mode washes less: a dark surface swallows chroma faster, so an equal mix would flatten the
+/// supporting tones into the background.
+struct GreetGradientTones {
+    let base: Color
+    let primary: Color
+    let secondary: Color
+    let accent: Color
 
-        public init(base: Color, primary: Color, secondary: Color, accent: Color) {
-            self.base = base
-            self.primary = primary
-            self.secondary = secondary
-            self.accent = accent
-        }
-    }
+    init(brand: Color, colorScheme: ColorScheme) {
+        let secondaryMix = colorScheme == .dark ? 0.22 : 0.30
+        let accentMix = colorScheme == .dark ? 0.42 : 0.55
 
-    public var light: Tones
-    public var dark: Tones
-
-    public static let standard = Self.brand(.blue)
-
-    public init(light: Tones, dark: Tones? = nil) {
-        self.light = light
-        self.dark = dark ?? light
-    }
-
-    /// The brand colour becomes `primary`, and the supporting tones are that same colour washed
-    /// toward the platform surface, so the field reads as one colour rather than as three unrelated
-    /// hues. Because the surface is light in light mode and dark in dark mode, the same wash lifts
-    /// the palette in one and deepens it in the other.
-    ///
-    /// Dark mode washes less: a dark surface swallows chroma faster, so an equal mix would flatten
-    /// the supporting tones into the background.
-    public static func brand(_ brand: Color) -> Self {
-        Self(
-            light: Tones(
-                base: Tokens.background,
-                primary: brand,
-                secondary: brand.mix(with: Tokens.background, by: 0.30),
-                accent: brand.mix(with: Tokens.background, by: 0.55)),
-            dark: Tones(
-                base: Tokens.background,
-                primary: brand,
-                secondary: brand.mix(with: Tokens.background, by: 0.22),
-                accent: brand.mix(with: Tokens.background, by: 0.42)))
-    }
-
-    func tones(for colorScheme: ColorScheme) -> Tones {
-        colorScheme == .dark ? self.dark : self.light
+        self.base = Tokens.background
+        self.primary = brand
+        self.secondary = brand.mix(with: Tokens.background, by: secondaryMix)
+        self.accent = brand.mix(with: Tokens.background, by: accentMix)
     }
 }
 
@@ -143,9 +125,9 @@ public struct GreetGradientMotion: Equatable, Sendable {
 public struct GreetBackground {
     enum Storage {
         case system
-        case softGradient(brand: Color?, palette: GreetGradientPalette?)
+        case softGradient(brand: Color?)
         case linearGradient(colors: [Color], startPoint: UnitPoint, endPoint: UnitPoint)
-        case animatedGradient(brand: Color?, palette: GreetGradientPalette?, motion: GreetGradientMotion)
+        case animatedGradient(brand: Color?, motion: GreetGradientMotion)
         case custom((GreetBackgroundContext) -> AnyView)
     }
 
@@ -154,13 +136,10 @@ public struct GreetBackground {
     // Left as computed: GreetBackground is not Sendable — its `custom` case holds a plain
     // closure — so a static let would be a concurrency-unsafe global.
     public static var system: Self { Self(storage: .system) }
-    public static var softGradient: Self { Self(storage: .softGradient(brand: nil, palette: nil)) }
+    public static var softGradient: Self { Self(storage: .softGradient(brand: nil)) }
 
-    public static func softGradient(
-        brand: Color? = nil,
-        palette: GreetGradientPalette? = nil) -> Self
-    {
-        Self(storage: .softGradient(brand: brand, palette: palette))
+    public static func softGradient(brand: Color? = nil) -> Self {
+        Self(storage: .softGradient(brand: brand))
     }
 
     public static func linearGradient(
@@ -173,10 +152,9 @@ public struct GreetBackground {
 
     public static func animatedGradient(
         brand: Color? = nil,
-        palette: GreetGradientPalette? = nil,
         motion: GreetGradientMotion = .standard) -> Self
     {
-        Self(storage: .animatedGradient(brand: brand, palette: palette, motion: motion))
+        Self(storage: .animatedGradient(brand: brand, motion: motion))
     }
 
     public static func custom<Background: View>(
@@ -197,12 +175,9 @@ extension GreetBackground {
             // opaque colour over it is what made the default presentation look unlike a system
             // sheet. `Tokens.background` stays as the opaque base the gradients composite onto.
             AnyView(EmptyView())
-        case let .softGradient(brand, palette):
+        case let .softGradient(brand):
             AnyView(GreetSoftGradientBackground(
-                tones: GreetGradientPaletteResolver.tones(
-                    brand: brand,
-                    palette: palette,
-                    context: context),
+                tones: context.tones(brand: brand),
                 colorScheme: context.colorScheme,
                 accessibility: context.gradientAccessibility))
         case let .linearGradient(colors, startPoint, endPoint):
@@ -210,12 +185,9 @@ extension GreetBackground {
                 colors: colors,
                 startPoint: startPoint,
                 endPoint: endPoint))
-        case let .animatedGradient(brand, palette, motion):
+        case let .animatedGradient(brand, motion):
             AnyView(GreetAnimatedGradientBackground(
-                tones: GreetGradientPaletteResolver.tones(
-                    brand: brand,
-                    palette: palette,
-                    context: context),
+                tones: context.tones(brand: brand),
                 colorScheme: context.colorScheme,
                 motion: motion,
                 reduceMotion: context.reduceMotion,
@@ -227,7 +199,7 @@ extension GreetBackground {
 }
 
 private struct GreetSoftGradientBackground: View {
-    let tones: GreetGradientPalette.Tones
+    let tones: GreetGradientTones
     let colorScheme: ColorScheme
     let accessibility: GreetGradientAccessibility
 
@@ -283,7 +255,7 @@ private struct GreetLinearGradientBackground: View {
 }
 
 private struct GreetAnimatedGradientBackground: View {
-    let tones: GreetGradientPalette.Tones
+    let tones: GreetGradientTones
     let colorScheme: ColorScheme
     let motion: GreetGradientMotion
     let reduceMotion: Bool
@@ -352,7 +324,7 @@ private enum GreetAnimatedGradientRenderer {
     static func draw(
         context: inout GraphicsContext,
         size: CGSize,
-        tones: GreetGradientPalette.Tones,
+        tones: GreetGradientTones,
         tuning: GreetAnimatedGradientTuning,
         centers: [CGPoint])
     {
@@ -444,17 +416,6 @@ private enum GreetAnimatedGradientRenderer {
                 center: centerPoint,
                 startRadius: 0,
                 endRadius: radius))
-    }
-}
-
-private enum GreetGradientPaletteResolver {
-    static func tones(
-        brand: Color?,
-        palette: GreetGradientPalette?,
-        context: GreetBackgroundContext) -> GreetGradientPalette.Tones
-    {
-        let resolvedPalette = palette ?? .brand(brand ?? context.brandColor ?? .blue)
-        return resolvedPalette.tones(for: context.colorScheme)
     }
 }
 

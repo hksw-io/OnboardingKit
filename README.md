@@ -132,38 +132,28 @@ GreetView(
 Built-in options:
 
 - `.system` — the default. Draws nothing, so the presentation's own surface shows through: a sheet keeps the material the platform gives it.
-- `.softGradient` / `.softGradient(brand:palette:)` — a restrained brand-derived background tuned for readable first-run content.
+- `.softGradient` / `.softGradient(brand:)` — a restrained brand-derived background tuned for readable first-run content.
 - `.linearGradient(colors:startPoint:endPoint:)` — app-provided colors with the library-managed footer treatment.
-- `.animatedGradient(brand:palette:motion:)` — an opt-in smooth full-surface animated gradient. It uses the style tint by default, adapts its tones for light and dark mode, and automatically becomes static when Reduce Motion is enabled.
+- `.animatedGradient(brand:motion:)` — an opt-in smooth full-surface animated gradient. It uses the style tint by default, adapts its tones for light and dark mode, and automatically becomes static when Reduce Motion is enabled.
 - `.custom { context in ... }` — a fully custom SwiftUI background. Use `context.reduceMotion`, `context.reduceTransparency`, `context.colorSchemeContrast`, `context.brandColor`, and `context.colorScheme` to keep custom backgrounds consistent and accessible.
 
 Destination views can still draw their own backgrounds. If they do, that local destination background appears above the GreetKit background.
 
 Every background spans behind the pinned footer and button area, including `.system`. Scroll indicators are hidden on iOS, where a swipe and the scroll edge effect already say the content continues, and left to the system on macOS, where the scroller is how a window tells you there is more below.
 
-`GreetStyle.tint` is the default brand color for `.softGradient` and `.animatedGradient()`. Pass `brand:` when the background should use a different brand color from the controls, or pass a full palette when an app needs exact light and dark tones:
+`GreetStyle.tint` is the default brand color for `.softGradient` and `.animatedGradient()`. Pass `brand:` when the background should use a different brand color from the controls:
 
 ```swift
-let palette = GreetGradientPalette(
-    light: .init(
-        base: .white,
-        primary: .pink,
-        secondary: .orange,
-        accent: .yellow),
-    dark: .init(
-        base: .black,
-        primary: .pink,
-        secondary: .purple,
-        accent: .cyan))
-
 GreetView(
     content: MyGreet(),
     isLoading: $isLoading,
     errorMessage: $errorMessage,
     onPrimary: {},
     onSkip: {})
-    .greetBackground(.animatedGradient(palette: palette))
+    .greetBackground(.animatedGradient(brand: .pink))
 ```
+
+The supporting tones are derived from that one color — washed toward the platform surface, which lifts them in light mode and deepens them in dark. An app that needs exact control over every tone should use `.custom { context in ... }` and draw the gradient itself.
 
 Use `motion:` when the default dancing gradient should be calmer or more expressive:
 
