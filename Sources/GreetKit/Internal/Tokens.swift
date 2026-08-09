@@ -18,6 +18,10 @@ enum Tokens {
         static let compactHorizontalPadding: CGFloat = 16
         static let regularHorizontalPadding: CGFloat = 24
         static let compactWidthBreakpoint: CGFloat = 390
+
+        static func isCompact(width: CGFloat) -> Bool {
+            width <= compactWidthBreakpoint
+        }
         static let footerControlSpacing: CGFloat = Spacing.medium
         static let footerTopPadding: CGFloat = 20
         /// The button needs to sit off the sheet edge, not against it. On the overview the skip

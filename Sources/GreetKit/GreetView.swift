@@ -241,17 +241,6 @@ enum GreetKeyboardPolicy {
     }
 }
 
-enum LayoutMetrics {
-    static func horizontalPadding(
-        for width: CGFloat,
-        compact: CGFloat,
-        regular: CGFloat,
-        breakpoint: CGFloat) -> CGFloat
-    {
-        width <= breakpoint ? compact : regular
-    }
-}
-
 private struct GreetBackgroundView: View {
     let background: GreetBackground
     let reduceMotion: Bool
@@ -599,11 +588,11 @@ private struct GreetHorizontalPadding: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .padding(.horizontal, LayoutMetrics.horizontalPadding(
-                for: self.containerWidth,
-                compact: self.compactPadding,
-                regular: self.regularPadding,
-                breakpoint: Tokens.Layout.compactWidthBreakpoint))
+            .padding(
+                .horizontal,
+                Tokens.Layout.isCompact(width: self.containerWidth)
+                    ? self.compactPadding
+                    : self.regularPadding)
     }
 }
 

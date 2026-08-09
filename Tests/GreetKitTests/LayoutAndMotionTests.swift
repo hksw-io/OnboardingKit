@@ -57,58 +57,26 @@ struct LayoutAndMotionTests {
     }
 
     @Test
-    func layoutUsesCompactPaddingAtBreakpoint() {
-        let padding = LayoutMetrics.horizontalPadding(
-            for: 390,
-            compact: 16,
-            regular: 24,
-            breakpoint: 390)
-
-        #expect(padding == 16)
-    }
-
-    @Test
-    func layoutUsesRegularPaddingAboveBreakpoint() {
-        let padding = LayoutMetrics.horizontalPadding(
-            for: 391,
-            compact: 16,
-            regular: 24,
-            breakpoint: 390)
-
-        #expect(padding == 24)
+    func theBreakpointItselfCountsAsCompact() {
+        #expect(Tokens.Layout.isCompact(width: Tokens.Layout.compactWidthBreakpoint))
+        #expect(!Tokens.Layout.isCompact(width: Tokens.Layout.compactWidthBreakpoint + 1))
     }
 
     /// The container width arrives one layout pass late, from an `onGeometryChange` observer.
-    /// The seeded value has to pick the same padding the measured pass will, or the content
-    /// reflows and rewraps underneath the feature reveal.
+    /// The seeded value has to land in the same padding bucket the measured pass will, or the
+    /// content reflows and rewraps underneath the feature reveal.
     @Test
     func assumedContainerWidthMatchesTheMeasuredPadding() {
-        let assumed = LayoutMetrics.horizontalPadding(
-            for: Tokens.Platform.assumedContainerWidth,
-            compact: 16,
-            regular: 24,
-            breakpoint: Tokens.Layout.compactWidthBreakpoint)
+        let assumed = Tokens.Layout.isCompact(width: Tokens.Platform.assumedContainerWidth)
 
         #if os(macOS)
             // Every Mac sheet is at least sheetMinWidth, which is past the breakpoint.
-            let measured = LayoutMetrics.horizontalPadding(
-                for: Tokens.Platform.sheetMinWidth,
-                compact: 16,
-                regular: 24,
-                breakpoint: Tokens.Layout.compactWidthBreakpoint)
-
-            #expect(assumed == 24)
-            #expect(assumed == measured)
+            #expect(!assumed)
+            #expect(assumed == Tokens.Layout.isCompact(width: Tokens.Platform.sheetMinWidth))
         #else
             // A phone-width sheet sits at or under the breakpoint.
-            let measured = LayoutMetrics.horizontalPadding(
-                for: Tokens.Layout.compactWidthBreakpoint,
-                compact: 16,
-                regular: 24,
-                breakpoint: Tokens.Layout.compactWidthBreakpoint)
-
-            #expect(assumed == 16)
-            #expect(assumed == measured)
+            #expect(assumed)
+            #expect(assumed == Tokens.Layout.isCompact(width: Tokens.Layout.compactWidthBreakpoint))
         #endif
     }
 
