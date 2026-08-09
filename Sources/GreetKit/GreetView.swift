@@ -767,7 +767,9 @@ private struct GreetPreviewContent: GreetContent {
     var errorOKText: Text { Text("OK") }
 }
 
-private struct LongGreetPreviewContent: GreetContent {
+/// Everything the layout has to survive at once: long wrapping copy, twelve rows, a narrow
+/// container, dark mode, and an accessibility Dynamic Type size.
+private struct StressGreetPreviewContent: GreetContent {
     var appIcon: Image? { Image(systemName: "rectangle.stack.badge.plus.fill") }
     var title: Text {
         Text("A much longer greet title that must wrap cleanly")
@@ -794,6 +796,9 @@ private struct LongGreetPreviewContent: GreetContent {
     var errorOKText: Text { Text("OK") }
 }
 
+/// The interactive one: run the route chain, watch the loading flip, switch the background from
+/// the canvas. Background and motion variants are a modifier away, so they are not separate
+/// previews.
 #Preview("Greet") {
     @Previewable @State var isLoading = false
     @Previewable @State var errorMessage: String?
@@ -810,73 +815,17 @@ private struct LongGreetPreviewContent: GreetContent {
         primaryRouteDestination: { route in
             GreetPrimaryRoutePreviewDestination(route: route)
         })
-}
-
-#Preview("Greet Soft Gradient") {
-    GreetView(
-        content: GreetPreviewContent(),
-        isLoading: .constant(false),
-        errorMessage: .constant(nil),
-        onPrimary: {},
-        onSkip: {},
-        primaryRouteDestination: { route in
-            GreetPrimaryRoutePreviewDestination(route: route)
-        })
-        .greetBackground(.softGradient)
-        .frame(width: 390, height: 740)
-}
-
-#Preview("Greet Animated Background") {
-    GreetView(
-        content: GreetPreviewContent(),
-        isLoading: .constant(false),
-        errorMessage: .constant(nil),
-        onPrimary: {},
-        onSkip: {},
-        primaryRouteDestination: { route in
-            GreetPrimaryRoutePreviewDestination(route: route)
-        })
         .greetBackground(.animatedGradient())
-        .frame(width: 390, height: 740)
 }
 
-#Preview("Greet Long Narrow") {
+#Preview("Greet Stress") {
     GreetView(
-        content: LongGreetPreviewContent(),
+        content: StressGreetPreviewContent(),
         isLoading: .constant(false),
         errorMessage: .constant(nil),
         onPrimary: {},
-        onSkip: {},
-        primaryRouteDestination: { route in
-            GreetPrimaryRoutePreviewDestination(route: route)
-        })
+        onSkip: {})
         .frame(width: 320, height: 760)
-}
-
-#Preview("Greet Loading") {
-    GreetView(
-        content: GreetPreviewContent(),
-        isLoading: .constant(true),
-        errorMessage: .constant(nil),
-        onPrimary: {},
-        onSkip: {},
-        primaryRouteDestination: { route in
-            GreetPrimaryRoutePreviewDestination(route: route)
-        })
-        .frame(width: 390, height: 740)
-}
-
-#Preview("Greet Dark Accessibility") {
-    GreetView(
-        content: LongGreetPreviewContent(),
-        isLoading: .constant(false),
-        errorMessage: .constant(nil),
-        onPrimary: {},
-        onSkip: {},
-        primaryRouteDestination: { route in
-            GreetPrimaryRoutePreviewDestination(route: route)
-        })
-        .frame(width: 390, height: 780)
         .preferredColorScheme(.dark)
         .dynamicTypeSize(.accessibility2)
 }
@@ -894,11 +843,11 @@ private struct GreetPrimaryRoutePreviewDestination: View {
                 .foregroundStyle(.tint)
                 .accessibilityHidden(true)
 
-            self.title
+            Text(self.route.id)
                 .font(.title2.weight(.bold))
                 .multilineTextAlignment(.center)
 
-            self.description
+            Text("The primary button slides through chained follow-up routes inside the same sheet.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -906,32 +855,6 @@ private struct GreetPrimaryRoutePreviewDestination: View {
         .frame(maxWidth: Tokens.Layout.contentMaxWidth)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(Tokens.Spacing.xLarge)
-    }
-
-    private var title: Text {
-        switch self.route.id {
-        case "permissions":
-            Text("Enable permissions")
-        case "sample-data":
-            Text("Create sample data")
-        case "notifications":
-            Text("Set reminders")
-        default:
-            Text("Primary Route")
-        }
-    }
-
-    private var description: Text {
-        switch self.route.id {
-        case "permissions":
-            Text("Ask for access at the moment it makes sense and explain why it helps.")
-        case "sample-data":
-            Text("Prepare starter content so users can try the app immediately.")
-        case "notifications":
-            Text("Offer a final setup step before completing greet.")
-        default:
-            Text("The primary button can slide through chained follow-up routes inside the same sheet.")
-        }
     }
 }
 #endif
