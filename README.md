@@ -13,9 +13,25 @@ domain language `Greet...`, for example `GreetView`, `GreetContent`, and
 ## Preview
 
 <p>
-  <img src="Docs/Media/greetkit-default.png" alt="GreetKit default welcome screen with branded gradient background and pinned actions." width="360">
-  <img src="Docs/Media/greetkit-long-content.png" alt="GreetKit long localized welcome content with branded gradient background, footer fade, and pinned actions." width="360">
+  <img src="Docs/Media/greetkit-ios-system-light.png" width="240" alt="GreetKit on iPhone in light mode with the default system background: app icon, Welcome title, three feature rows, and a pinned Get started button above a Skip for now link.">
+  <img src="Docs/Media/greetkit-ios-soft-light.png" width="240" alt="GreetKit on iPhone in light mode with the soft gradient background, tinted indigo.">
+  <img src="Docs/Media/greetkit-ios-animated-dark.png" width="240" alt="GreetKit on iPhone in dark mode with the animated gradient background, tinted purple.">
 </p>
+
+Left to right: the default `.system` background, `.softGradient`, and `.animatedGradient` in dark
+mode. All three are the same sheet with one modifier changed.
+
+### iPad and macOS
+
+<p>
+  <img src="Docs/Media/greetkit-ipad-light.png" width="320" alt="GreetKit on iPad presented as a centered form sheet, with the content held to a readable maximum width.">
+  <img src="Docs/Media/greetkit-macos-light.png" width="290" alt="GreetKit in a macOS window in light mode, with the default system background.">
+  <img src="Docs/Media/greetkit-macos-dark.png" width="290" alt="GreetKit in a macOS window in dark mode with the soft gradient background.">
+</p>
+
+On iPad the sheet is a form sheet and the content stays at a readable width rather than stretching.
+On macOS the view carries window proportions instead of phone ones, and the icon, type, spacing, and
+reveal travel are all scaled for the desktop.
 
 ## Requirements
 
@@ -163,6 +179,13 @@ GreetView(
 
 The supporting tones are derived from that one color — washed toward the platform surface, which lifts them in light mode and deepens them in dark. An app that needs exact control over every tone should use `.custom { context in ... }` and draw the gradient itself.
 
+<p>
+  <img src="Docs/Media/greetkit-ios-soft-light.png" width="240" alt="The soft gradient background on iPhone in light mode.">
+  <img src="Docs/Media/greetkit-ios-soft-dark.png" width="240" alt="The same soft gradient background on iPhone in dark mode, deeper and less washed out.">
+</p>
+
+The same `.softGradient` and the same brand color in both schemes.
+
 Use `motion:` when the default dancing gradient should be calmer or more expressive:
 
 ```swift
@@ -203,11 +226,16 @@ Text roles are deliberately not overridable. Title, subtitle, feature rows, and 
 The view is purely presentational:
 
 - Give every `GreetFeatureItem` and `GreetPrimaryRoute` a stable `id`. These IDs preserve SwiftUI identity and are used for routing and analytics.
-- `isLoading: Binding<Bool>` — when `true`, the primary button shows a progress spinner and both buttons are disabled.
+- `isLoading: Binding<Bool>` — when `true`, the primary button shows a progress spinner and both buttons are disabled (below, right).
 - `errorMessage: Binding<String?>` — when non-nil, the view presents an alert. Setting it back to `nil` (or letting the user tap the OK button) dismisses the alert.
 - `allowsInteractiveDismissal` — defaults to `true`. Set it to `false` only for setup flows that must block swipe or window dismissal.
 - `onPrimary` / `onSkip` — fired on tap. Your state layer handles the rest.
 - `primaryRoutes` / `primaryRouteDestination` — optional chained follow-up routes opened by the primary button with in-sheet slide transitions. The package supplies customizable Next and Done controls. For a single follow-up step, give `primaryRoutes` one route.
+
+<p>
+  <img src="Docs/Media/greetkit-ios-soft-light.png" width="240" alt="The primary button idle, reading Get started.">
+  <img src="Docs/Media/greetkit-ios-loading.png" width="240" alt="The same sheet with isLoading true: the primary button shows a spinner in place of its label and both buttons are disabled.">
+</p>
 
 Route navigation state is intentionally transient and owned inside `GreetView`; persist only completed setup state in your app. Destination builders are generic at the public API and type-erased internally so call sites can return different SwiftUI views without exposing that plumbing.
 
@@ -224,6 +252,14 @@ var primaryButtonLoadingAccessibilityValue: Text {
 ```
 
 Feature icons and the app icon are hidden from VoiceOver; feature labels carry the header trait and read separately from their descriptions. Reduce Motion removes the feature reveal animation, the route slide transitions, and the animated gradient's movement.
+
+<p>
+  <img src="Docs/Media/greetkit-ios-accessibility.png" width="240" alt="GreetKit at an accessibility Dynamic Type size: the title, subtitle, and feature text have all scaled up, the content scrolls under the pinned footer, and the primary and skip buttons stay in place.">
+</p>
+
+Every text role scales with Dynamic Type, and the icons and paddings scale with it through
+`@ScaledMetric`. At accessibility sizes the content scrolls under the footer rather than compressing
+— the primary and skip buttons stay reachable at any type size.
 
 The built-in gradient backgrounds flatten themselves under Reduce Transparency or Increase Contrast: the color wash is damped and more of the opaque base shows, so text contrast no longer depends on where a gradient blob happens to sit. Custom backgrounds get the same signals through `GreetBackgroundContext`.
 
