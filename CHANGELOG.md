@@ -4,6 +4,60 @@ All notable changes to GreetKit are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-08-09
+
+An over-engineering audit, applied. Roughly a thousand lines leave the package and no feature does:
+every cut is either a second way to do something the package already did, or a helper standing
+between a call site and an API that already handled the case.
+
+### Removed
+
+- **Breaking.** `GreetStyle` keeps `tint` and loses its seven other colour roles — `titleColor`,
+  `subtitleColor`, `featureIconColor`, `featureTitleColor`, `featureDescriptionColor`,
+  `primaryButtonForegroundColor`, and `secondaryButtonColor`. All seven defaulted to `nil` meaning
+  "use the system treatment", so each one existed to let an app replace a system label colour with a
+  hand-picked one. Text now uses the system label hierarchy, and the primary button its own
+  prominent glass treatment. `featureIconColor` was doubly redundant: it fell back to `tint`, which
+  the view already publishes to the environment.
+- **Breaking.** `GreetGradientPalette` and the `palette:` parameter on `.softGradient` and
+  `.animatedGradient`. It was a third way to recolour one background, on top of `brand:` and
+  `.custom`, and the only one wide enough — eight colours over two schemes — to compose a field the
+  gradient tuning was never balanced against. Pass `brand:`, or draw it yourself with `.custom`.
+- **Breaking.** `.linearGradient(colors:startPoint:endPoint:)`. It applied no treatment of its own,
+  so it is `.custom { _ in LinearGradient(...) }` with the SwiftUI type the caller already knows.
+- **Breaking.** The `primaryDestination:` initializer. A single follow-up step is a chain of one:
+  `primaryRoutes: [GreetPrimaryRoute(id: "setup")]` with `primaryRouteDestination:`, where the
+  button reads Done rather than Next. It was a parallel implementation of the route chain,
+  unreachable at the same time as one, with its own container, its own state flag, its own
+  precedence rule, and four tests covering nothing but which of the two paths won.
+
+### Changed
+
+- `GreetGradientMotion.strength` now controls motion alone. It used to drive three visual scales as
+  well, brightening the base tint and blobs and tightening the blur as the gradient sped up — so
+  choosing `.subtle` because the drift was distracting also gave you a paler sheet. Reduce Motion
+  and Reduce Transparency damp those two things separately, and so should this. `.animatedGradient()`
+  renders exactly as before; `.subtle` and `.expressive` now differ from it in travel and speed only.
+
+### Internal
+
+- `LayoutMetrics.horizontalPadding(for:compact:regular:breakpoint:)` becomes
+  `Tokens.Layout.isCompact(width:)`; three of its four parameters existed only so tests could pass
+  literals to a one-line ternary.
+- `GreetKeyboardPolicy` is inlined. An enum, a static function, and a four-case test file wrapped
+  `a && b`. Escape behaviour is unchanged.
+- The two copies of `damped(for:)` become one mechanism. `GreetGradientAccessibility` is now
+  `GreetGradientDamping`: its two Bools collapse to the one flag they were `||`-ed into, and its two
+  loose constants become the `tint(_:)` and `veil(_:)` operations that consumed them.
+- `greetTint(_:)` and `greetCancelShortcut(_:)` are gone — `tint(_: Color?)` and
+  `keyboardShortcut(_: KeyboardShortcut?)` already accept the optional.
+- The repeated macOS sheet frame becomes `greetSheetSizing()`. `GreetFeatureList` is inlined.
+  `GreetBackgroundView` stays, as a render boundary for the animating `Canvas`, but reads its own
+  accessibility environment instead of taking four forwarded properties.
+- Nineteen of twenty-five view tests had no expectation — their bodies were `_ = GreetView(...)`,
+  which the compiler proves. One broad smoke test covers the surface instead. Six previews become
+  two: the interactive one, and one applying every layout stress at once.
+
 ## [2.0.1] - 2026-07-25
 
 ### Changed

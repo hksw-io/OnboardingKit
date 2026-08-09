@@ -25,10 +25,10 @@ domain language `Greet...`, for example `GreetView`, `GreetContent`, and
 ## Installation
 
 ```swift
-.package(url: "https://github.com/hksw-io/GreetKit.git", from: "2.0.1")
+.package(url: "https://github.com/hksw-io/GreetKit.git", from: "3.0.0")
 ```
 
-Or in Xcode: **File > Add Package Dependencies**, enter the URL above, and choose **Up to Next Major Version** from `2.0.1`.
+Or in Xcode: **File > Add Package Dependencies**, enter the URL above, and choose **Up to Next Major Version** from `3.0.0`.
 
 See [CHANGELOG.md](CHANGELOG.md) for what changed between releases.
 
