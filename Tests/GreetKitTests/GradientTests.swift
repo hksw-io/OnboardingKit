@@ -20,21 +20,21 @@ struct GradientTests {
     }
 
     @Test
-    func backgroundContextDefaultsToStandardAccessibilitySettings() {
+    func backgroundContextDefaultsToUndampedGradients() {
         let context = GreetBackgroundContext(reduceMotion: false)
 
         #expect(!context.reduceTransparency)
         #expect(context.colorSchemeContrast == .standard)
-        #expect(!context.gradientAccessibility.prefersFlatBackground)
+        #expect(!context.gradientDamping.isActive)
     }
 
     @Test
-    func backgroundContextFlagsEitherAccessibilitySetting() {
+    func backgroundContextDampsForEitherAccessibilitySetting() {
         let transparency = GreetBackgroundContext(reduceMotion: false, reduceTransparency: true)
         let contrast = GreetBackgroundContext(reduceMotion: false, colorSchemeContrast: .increased)
 
-        #expect(transparency.gradientAccessibility.prefersFlatBackground)
-        #expect(contrast.gradientAccessibility.prefersFlatBackground)
+        #expect(transparency.gradientDamping.isActive)
+        #expect(contrast.gradientDamping.isActive)
     }
 
     /// Both settings mean the same thing for a decorative wash: less colour, more of the opaque
@@ -42,7 +42,7 @@ struct GradientTests {
     @Test
     func softGradientDampsItsWashWhenAFlatBackgroundIsPreferred() {
         let standard = GreetGradientVisualTuning.soft(colorScheme: .light)
-        let damped = standard.damped(for: GreetGradientAccessibility(
+        let damped = standard.damped(by: GreetGradientDamping(
             reduceTransparency: true,
             increaseContrast: false))
 
@@ -58,7 +58,7 @@ struct GradientTests {
     @Test
     func animatedGradientDampsItsBlobsWhenAFlatBackgroundIsPreferred() {
         let standard = GreetGradientVisualTuning.animated(colorScheme: .dark)
-        let damped = standard.damped(for: GreetGradientAccessibility(
+        let damped = standard.damped(by: GreetGradientDamping(
             reduceTransparency: false,
             increaseContrast: true))
 
@@ -69,12 +69,12 @@ struct GradientTests {
     }
 
     @Test
-    func tuningIsUntouchedWithStandardAccessibilitySettings() {
+    func tuningIsUntouchedWhenDampingIsInactive() {
         let soft = GreetGradientVisualTuning.soft(colorScheme: .light)
         let animated = GreetGradientVisualTuning.animated(colorScheme: .light)
 
-        #expect(soft.damped(for: .standard).primaryOpacity == soft.primaryOpacity)
-        #expect(animated.damped(for: .standard).primaryBlobOpacity == animated.primaryBlobOpacity)
+        #expect(soft.damped(by: .none).primaryOpacity == soft.primaryOpacity)
+        #expect(animated.damped(by: .none).primaryBlobOpacity == animated.primaryBlobOpacity)
     }
 
     @Test

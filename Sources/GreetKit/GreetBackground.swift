@@ -25,8 +25,8 @@ public struct GreetBackgroundContext: Sendable {
 }
 
 extension GreetBackgroundContext {
-    var gradientAccessibility: GreetGradientAccessibility {
-        GreetGradientAccessibility(
+    var gradientDamping: GreetGradientDamping {
+        GreetGradientDamping(
             reduceTransparency: self.reduceTransparency,
             increaseContrast: self.colorSchemeContrast == .increased)
     }
@@ -39,24 +39,34 @@ extension GreetBackgroundContext {
     }
 }
 
-/// Whether the person has asked for a background that competes less with the text on top of it.
+/// Flattens a decorative colour wash when the person has asked for a background that competes less
+/// with the text on top of it.
 ///
-/// Reduce Transparency and Increase Contrast both mean the same thing for a decorative colour
-/// wash: damp it, and let the opaque base carry more of the surface, so foreground contrast stops
-/// depending on where a blob happens to sit.
-struct GreetGradientAccessibility: Equatable, Sendable {
-    static let standard = Self(reduceTransparency: false, increaseContrast: false)
+/// Reduce Transparency and Increase Contrast both mean the same thing for a wash like this: damp
+/// it, and let the opaque base carry more of the surface, so foreground contrast stops depending on
+/// where a blob happens to sit. Both gradients apply it the same way, field by field, so the two
+/// operations live here rather than being re-derived from loose constants at each call.
+struct GreetGradientDamping: Equatable, Sendable {
+    static let none = Self(isActive: false)
 
-    /// How much of the coloured wash survives when a flatter background is requested.
-    static let tintScale: Double = 0.3
+    let isActive: Bool
+
+    init(reduceTransparency: Bool, increaseContrast: Bool) {
+        self.init(isActive: reduceTransparency || increaseContrast)
+    }
+
+    private init(isActive: Bool) {
+        self.isActive = isActive
+    }
+
+    /// How much of the coloured wash survives.
+    func tint(_ opacity: Double) -> Double {
+        self.isActive ? opacity * 0.3 : opacity
+    }
+
     /// How much more of the opaque base is pulled over the wash.
-    static let veilBoost: Double = 0.25
-
-    let reduceTransparency: Bool
-    let increaseContrast: Bool
-
-    var prefersFlatBackground: Bool {
-        self.reduceTransparency || self.increaseContrast
+    func veil(_ opacity: Double) -> Double {
+        self.isActive ? min(1, opacity + 0.25) : opacity
     }
 }
 
@@ -163,14 +173,14 @@ extension GreetBackground {
             AnyView(GreetSoftGradientBackground(
                 tones: context.tones(brand: brand),
                 colorScheme: context.colorScheme,
-                accessibility: context.gradientAccessibility))
+                damping: context.gradientDamping))
         case let .animatedGradient(brand, motion):
             AnyView(GreetAnimatedGradientBackground(
                 tones: context.tones(brand: brand),
                 colorScheme: context.colorScheme,
                 motion: motion,
                 reduceMotion: context.reduceMotion,
-                accessibility: context.gradientAccessibility))
+                damping: context.gradientDamping))
         case let .custom(background):
             background(context)
         }
@@ -180,12 +190,12 @@ extension GreetBackground {
 private struct GreetSoftGradientBackground: View {
     let tones: GreetGradientTones
     let colorScheme: ColorScheme
-    let accessibility: GreetGradientAccessibility
+    let damping: GreetGradientDamping
 
     var body: some View {
         let tuning = GreetGradientVisualTuning
             .soft(colorScheme: self.colorScheme)
-            .damped(for: self.accessibility)
+            .damped(by: self.damping)
 
         ZStack {
             self.tones.base
@@ -225,7 +235,7 @@ private struct GreetAnimatedGradientBackground: View {
     let colorScheme: ColorScheme
     let motion: GreetGradientMotion
     let reduceMotion: Bool
-    let accessibility: GreetGradientAccessibility
+    let damping: GreetGradientDamping
 
     #if os(macOS)
         @Environment(\.controlActiveState) private var controlActiveState
@@ -265,7 +275,7 @@ private struct GreetAnimatedGradientBackground: View {
                     motion: self.motion)
                 let tuning = GreetGradientVisualTuning
                     .animated(colorScheme: self.colorScheme)
-                    .damped(for: self.accessibility)
+                    .damped(by: self.damping)
 
                 Canvas(
                     opaque: true,
@@ -393,22 +403,15 @@ struct GreetSoftGradientTuning {
     let topVeilOpacity: Double
     let bottomVeilOpacity: Double
 
-    func damped(for accessibility: GreetGradientAccessibility) -> Self {
-        guard accessibility.prefersFlatBackground else {
-            return self
-        }
-
-        let scale = GreetGradientAccessibility.tintScale
-        let boost = GreetGradientAccessibility.veilBoost
-
-        return Self(
-            baseTintOpacity: self.baseTintOpacity * scale,
-            primaryOpacity: self.primaryOpacity * scale,
-            secondaryOpacity: self.secondaryOpacity * scale,
-            accentOpacity: self.accentOpacity * scale,
-            baseFadeOpacity: min(1, self.baseFadeOpacity + boost),
-            topVeilOpacity: min(1, self.topVeilOpacity + boost),
-            bottomVeilOpacity: min(1, self.bottomVeilOpacity + boost))
+    func damped(by damping: GreetGradientDamping) -> Self {
+        Self(
+            baseTintOpacity: damping.tint(self.baseTintOpacity),
+            primaryOpacity: damping.tint(self.primaryOpacity),
+            secondaryOpacity: damping.tint(self.secondaryOpacity),
+            accentOpacity: damping.tint(self.accentOpacity),
+            baseFadeOpacity: damping.veil(self.baseFadeOpacity),
+            topVeilOpacity: damping.veil(self.topVeilOpacity),
+            bottomVeilOpacity: damping.veil(self.bottomVeilOpacity))
     }
 }
 
@@ -422,22 +425,15 @@ struct GreetAnimatedGradientTuning {
     let bottomVeilOpacity: Double
     let blobBlurRatio: CGFloat
 
-    func damped(for accessibility: GreetGradientAccessibility) -> Self {
-        guard accessibility.prefersFlatBackground else {
-            return self
-        }
-
-        let scale = GreetGradientAccessibility.tintScale
-        let boost = GreetGradientAccessibility.veilBoost
-
-        return Self(
-            baseTintOpacity: self.baseTintOpacity * scale,
-            primaryBlobOpacity: self.primaryBlobOpacity * scale,
-            secondaryBlobOpacity: self.secondaryBlobOpacity * scale,
-            accentBlobOpacity: self.accentBlobOpacity * scale,
-            trailingBlobOpacity: self.trailingBlobOpacity * scale,
-            topVeilOpacity: min(1, self.topVeilOpacity + boost),
-            bottomVeilOpacity: min(1, self.bottomVeilOpacity + boost),
+    func damped(by damping: GreetGradientDamping) -> Self {
+        Self(
+            baseTintOpacity: damping.tint(self.baseTintOpacity),
+            primaryBlobOpacity: damping.tint(self.primaryBlobOpacity),
+            secondaryBlobOpacity: damping.tint(self.secondaryBlobOpacity),
+            accentBlobOpacity: damping.tint(self.accentBlobOpacity),
+            trailingBlobOpacity: damping.tint(self.trailingBlobOpacity),
+            topVeilOpacity: damping.veil(self.topVeilOpacity),
+            bottomVeilOpacity: damping.veil(self.bottomVeilOpacity),
             blobBlurRatio: self.blobBlurRatio)
     }
 }
