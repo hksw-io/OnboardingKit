@@ -10,7 +10,6 @@ public struct GreetView<Content: GreetContent>: View {
     private var style: GreetStyle = .standard
     let onPrimary: () -> Void
     let onSkip: () -> Void
-    let primaryDestination: (() -> AnyView)?
     let primaryRouteDestination: ((GreetPrimaryRoute) -> AnyView)?
     let onPrimaryRoutesComplete: () -> Void
 
@@ -43,27 +42,6 @@ public struct GreetView<Content: GreetContent>: View {
         self.allowsInteractiveDismissal = allowsInteractiveDismissal
         self.onPrimary = onPrimary
         self.onSkip = onSkip
-        self.primaryDestination = nil
-        self.primaryRouteDestination = nil
-        self.onPrimaryRoutesComplete = {}
-    }
-
-    public init<PrimaryDestination: View>(
-        content: Content,
-        isLoading: Binding<Bool>,
-        errorMessage: Binding<String?>,
-        allowsInteractiveDismissal: Bool = true,
-        onPrimary: @escaping () -> Void,
-        onSkip: @escaping () -> Void,
-        @ViewBuilder primaryDestination: @escaping () -> PrimaryDestination)
-    {
-        self.content = content
-        self._isLoading = isLoading
-        self._errorMessage = errorMessage
-        self.allowsInteractiveDismissal = allowsInteractiveDismissal
-        self.onPrimary = onPrimary
-        self.onSkip = onSkip
-        self.primaryDestination = { AnyView(primaryDestination()) }
         self.primaryRouteDestination = nil
         self.onPrimaryRoutesComplete = {}
     }
@@ -84,7 +62,6 @@ public struct GreetView<Content: GreetContent>: View {
         self.allowsInteractiveDismissal = allowsInteractiveDismissal
         self.onPrimary = onPrimary
         self.onSkip = onSkip
-        self.primaryDestination = nil
         self.primaryRouteDestination = { AnyView(primaryRouteDestination($0)) }
         self.onPrimaryRoutesComplete = onPrimaryRoutesComplete
     }
@@ -146,11 +123,6 @@ public struct GreetView<Content: GreetContent>: View {
                         },
                         onDone: self.completePrimaryRoutes)
                         .id("primary-route-\(activeRoute.route.id)")
-                        .transition(self.routeTransition)
-                } else if self.routeState.showsSingleDestination, let primaryDestination = self.primaryDestination {
-                    GreetPrimaryDestinationContainer(
-                        destination: primaryDestination())
-                        .id("primary-destination")
                         .transition(self.routeTransition)
                 } else {
                     self.greetOverview
@@ -219,8 +191,7 @@ public struct GreetView<Content: GreetContent>: View {
 
         self.routeState.begin(
             routes: self.content.primaryRoutes,
-            hasRouteDestination: self.primaryRouteDestination != nil,
-            hasSingleDestination: self.primaryDestination != nil)
+            hasRouteDestination: self.primaryRouteDestination != nil)
     }
 
     private func completePrimaryRoutes() {
@@ -298,24 +269,6 @@ private struct GreetBackgroundView: View {
                 brandColor: self.brandColor,
                 colorScheme: self.colorScheme))
             .ignoresSafeArea()
-    }
-}
-
-private struct GreetPrimaryDestinationContainer<Destination: View>: View {
-    let destination: Destination
-
-    var body: some View {
-        VStack(spacing: 0) {
-            self.destination
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        #if os(macOS)
-            .frame(
-                minWidth: Tokens.Platform.sheetMinWidth,
-                idealWidth: Tokens.Platform.sheetIdealWidth,
-                minHeight: Tokens.Platform.sheetMinHeight,
-                idealHeight: Tokens.Platform.sheetIdealHeight)
-        #endif
     }
 }
 

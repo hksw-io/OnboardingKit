@@ -19,41 +19,27 @@ struct GreetRouteState: Equatable {
     }
 
     private(set) var activeRouteID: GreetPrimaryRoute.ID?
-    private(set) var showsSingleDestination: Bool
     private(set) var transitionDirection: GreetRouteTransitionDirection
 
     init(
         activeRouteID: GreetPrimaryRoute.ID? = nil,
-        showsSingleDestination: Bool = false,
         transitionDirection: GreetRouteTransitionDirection = .forward)
     {
         self.activeRouteID = activeRouteID
-        self.showsSingleDestination = showsSingleDestination
         self.transitionDirection = transitionDirection
     }
 
-    /// Opens the first route of a chain, or the single destination, depending on what the caller supplied.
+    /// Opens the first route of the chain.
     ///
-    /// A route chain takes precedence over a single destination. When neither is available the
-    /// state is left untouched so the overview stays on screen.
-    mutating func begin(
-        routes: [GreetPrimaryRoute],
-        hasRouteDestination: Bool,
-        hasSingleDestination: Bool)
-    {
-        if hasRouteDestination, let firstRoute = routes.first {
-            self.transitionDirection = .forward
-            self.showsSingleDestination = false
-            self.activeRouteID = firstRoute.id
-            return
-        }
-
-        guard hasSingleDestination else {
+    /// With no destination builder or no routes, the state is left untouched so the overview stays
+    /// on screen and the primary action is the caller's `onPrimary` alone.
+    mutating func begin(routes: [GreetPrimaryRoute], hasRouteDestination: Bool) {
+        guard hasRouteDestination, let firstRoute = routes.first else {
             return
         }
 
         self.transitionDirection = .forward
-        self.showsSingleDestination = true
+        self.activeRouteID = firstRoute.id
     }
 
     /// Moves to the route following `index`, completing the chain when there is no route left.
@@ -73,7 +59,6 @@ struct GreetRouteState: Equatable {
     mutating func complete() {
         self.transitionDirection = .backward
         self.activeRouteID = nil
-        self.showsSingleDestination = false
     }
 
     /// The route currently on screen, or `nil` when the active id is not part of `routes`.
@@ -94,11 +79,11 @@ struct GreetRouteState: Equatable {
     /// Resolved against `routes` rather than the raw active id, so the phase always matches
     /// the view that is actually rendered.
     func phaseID(in routes: [GreetPrimaryRoute]) -> String {
-        if let activeRoute = self.activeRoute(in: routes) {
-            return "route-\(activeRoute.route.id)"
+        guard let activeRoute = self.activeRoute(in: routes) else {
+            return "overview"
         }
 
-        return self.showsSingleDestination ? "single" : "overview"
+        return "route-\(activeRoute.route.id)"
     }
 }
 #endif

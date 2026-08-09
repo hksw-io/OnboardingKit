@@ -15,7 +15,6 @@ struct GreetRouteStateTests {
         let state = GreetRouteState()
 
         #expect(state.activeRouteID == nil)
-        #expect(!state.showsSingleDestination)
         #expect(state.phaseID(in: self.routes) == "overview")
         #expect(state.activeRoute(in: self.routes) == nil)
     }
@@ -24,61 +23,27 @@ struct GreetRouteStateTests {
     func beginOpensTheFirstRouteOfAChain() {
         var state = GreetRouteState()
 
-        state.begin(routes: self.routes, hasRouteDestination: true, hasSingleDestination: false)
+        state.begin(routes: self.routes, hasRouteDestination: true)
 
         #expect(state.activeRouteID == "permissions")
-        #expect(!state.showsSingleDestination)
         #expect(state.transitionDirection == .forward)
         #expect(state.phaseID(in: self.routes) == "route-permissions")
     }
 
     @Test
-    func beginPrefersTheRouteChainOverASingleDestination() {
+    func beginStaysOnTheOverviewWithoutARouteDestination() {
         var state = GreetRouteState()
 
-        state.begin(routes: self.routes, hasRouteDestination: true, hasSingleDestination: true)
-
-        #expect(state.activeRouteID == "permissions")
-        #expect(!state.showsSingleDestination)
-    }
-
-    @Test
-    func beginOpensTheSingleDestinationWhenThereIsNoChain() {
-        var state = GreetRouteState()
-
-        state.begin(routes: [], hasRouteDestination: false, hasSingleDestination: true)
+        state.begin(routes: self.routes, hasRouteDestination: false)
 
         #expect(state.activeRouteID == nil)
-        #expect(state.showsSingleDestination)
-        #expect(state.transitionDirection == .forward)
-        #expect(state.phaseID(in: []) == "single")
-    }
-
-    @Test
-    func beginFallsBackToTheSingleDestinationWhenTheChainIsEmpty() {
-        var state = GreetRouteState()
-
-        state.begin(routes: [], hasRouteDestination: true, hasSingleDestination: true)
-
-        #expect(state.activeRouteID == nil)
-        #expect(state.showsSingleDestination)
-    }
-
-    @Test
-    func beginStaysOnTheOverviewWithoutAnyDestination() {
-        var state = GreetRouteState()
-
-        state.begin(routes: self.routes, hasRouteDestination: false, hasSingleDestination: false)
-
-        #expect(state.activeRouteID == nil)
-        #expect(!state.showsSingleDestination)
         #expect(state.phaseID(in: self.routes) == "overview")
     }
 
     @Test
     func advanceMovesToTheNextRoute() {
         var state = GreetRouteState()
-        state.begin(routes: self.routes, hasRouteDestination: true, hasSingleDestination: false)
+        state.begin(routes: self.routes, hasRouteDestination: true)
 
         state.advance(after: 0, in: self.routes)
 
@@ -93,7 +58,7 @@ struct GreetRouteStateTests {
     @Test
     func advancingPastTheLastRouteReturnsToTheOverview() {
         var state = GreetRouteState()
-        state.begin(routes: self.routes, hasRouteDestination: true, hasSingleDestination: false)
+        state.begin(routes: self.routes, hasRouteDestination: true)
 
         state.advance(after: self.routes.count - 1, in: self.routes)
 
@@ -105,19 +70,18 @@ struct GreetRouteStateTests {
     @Test
     func completeReturnsToTheOverviewAndReversesTheTransition() {
         var state = GreetRouteState()
-        state.begin(routes: self.routes, hasRouteDestination: true, hasSingleDestination: false)
+        state.begin(routes: self.routes, hasRouteDestination: true)
 
         state.complete()
 
         #expect(state.activeRouteID == nil)
-        #expect(!state.showsSingleDestination)
         #expect(state.transitionDirection == .backward)
     }
 
     @Test
     func activeRouteResolvesIndexAndRoute() {
         var state = GreetRouteState()
-        state.begin(routes: self.routes, hasRouteDestination: true, hasSingleDestination: false)
+        state.begin(routes: self.routes, hasRouteDestination: true)
         state.advance(after: 0, in: self.routes)
 
         let activeRoute = state.activeRoute(in: self.routes)
@@ -143,24 +107,10 @@ struct GreetRouteStateTests {
     }
 
     @Test
-    func phaseIDPrefersTheRouteOverTheSingleDestination() {
-        let state = GreetRouteState(activeRouteID: "sample-data", showsSingleDestination: true)
-
-        #expect(state.phaseID(in: self.routes) == "route-sample-data")
-    }
-
-    @Test
-    func phaseIDReportsTheSingleDestinationWhenNoRouteResolves() {
-        let state = GreetRouteState(activeRouteID: "removed-route", showsSingleDestination: true)
-
-        #expect(state.phaseID(in: self.routes) == "single")
-    }
-
-    @Test
     func advanceHandlesASingleRouteChain() {
         let singleRoute = [GreetPrimaryRoute(id: "only")]
         var state = GreetRouteState()
-        state.begin(routes: singleRoute, hasRouteDestination: true, hasSingleDestination: false)
+        state.begin(routes: singleRoute, hasRouteDestination: true)
 
         #expect(state.activeRouteID == "only")
 
@@ -173,12 +123,12 @@ struct GreetRouteStateTests {
     @Test
     func reopeningAChainAfterCompletionRestoresForwardMotion() {
         var state = GreetRouteState()
-        state.begin(routes: self.routes, hasRouteDestination: true, hasSingleDestination: false)
+        state.begin(routes: self.routes, hasRouteDestination: true)
         state.complete()
 
         #expect(state.transitionDirection == .backward)
 
-        state.begin(routes: self.routes, hasRouteDestination: true, hasSingleDestination: false)
+        state.begin(routes: self.routes, hasRouteDestination: true)
 
         #expect(state.transitionDirection == .forward)
         #expect(state.activeRouteID == "permissions")
