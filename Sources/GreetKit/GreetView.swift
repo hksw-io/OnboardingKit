@@ -68,7 +68,7 @@ public struct GreetView<Content: GreetContent>: View {
 
     public var body: some View {
         self.greetContent
-            .greetTint(self.style.tint)
+            .tint(self.style.tint)
             .alert(
                 self.content.errorAlertTitle,
                 isPresented: self.errorPresented,
@@ -546,7 +546,7 @@ private struct GreetFooterSection<Content: GreetContent>: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
                 .greetLinkPointer()
-                .greetCancelShortcut(self.allowsCancelShortcut)
+                .keyboardShortcut(self.allowsCancelShortcut ? .cancelAction : nil)
                 .disabled(self.isLoading)
             }
         }
@@ -603,15 +603,6 @@ private extension View {
         }
     }
 
-    @ViewBuilder
-    func greetTint(_ color: Color?) -> some View {
-        if let color {
-            self.tint(color)
-        } else {
-            self
-        }
-    }
-
     /// Confirms the primary action with a light impact on iOS.
     ///
     /// The primary button commits the person to setup, which is the one moment in this sheet
@@ -638,16 +629,6 @@ private extension View {
             self
         #endif
     }
-
-    @ViewBuilder
-    func greetCancelShortcut(_ isEnabled: Bool) -> some View {
-        if isEnabled {
-            self.keyboardShortcut(.cancelAction)
-        } else {
-            self
-        }
-    }
-
 }
 
 private struct GreetPreviewContent: GreetContent {
