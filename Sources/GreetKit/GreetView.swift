@@ -761,7 +761,7 @@ private struct GreetPrimaryRoutePreviewDestination: View {
         }
         .frame(maxWidth: Tokens.Layout.contentMaxWidth)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(Tokens.Spacing.xLarge)
+        .padding(Tokens.Spacing.large)
     }
 }
 #endif
