@@ -171,16 +171,10 @@ public struct GreetView<Content: GreetContent>: View {
         }
         .scrollEdgeEffectStyle(.hard, for: .bottom)
         .greetContainerWidth(self.$containerWidth)
-        #if os(macOS)
-            .frame(
-                minWidth: Tokens.Platform.sheetMinWidth,
-                idealWidth: Tokens.Platform.sheetIdealWidth,
-                minHeight: Tokens.Platform.sheetMinHeight,
-                idealHeight: Tokens.Platform.sheetIdealHeight)
-        #endif
-            .onAppear {
-                self.featuresVisible = true
-            }
+        .greetSheetSizing()
+        .onAppear {
+            self.featuresVisible = true
+        }
     }
 
     private func performPrimaryAction() {
@@ -280,13 +274,7 @@ private struct GreetPrimaryRouteDestinationContainer<Content: GreetContent, Dest
                     .frame(maxWidth: .infinity)
             }
             .greetContainerWidth(self.$containerWidth)
-        #if os(macOS)
-            .frame(
-                minWidth: Tokens.Platform.sheetMinWidth,
-                idealWidth: Tokens.Platform.sheetIdealWidth,
-                minHeight: Tokens.Platform.sheetMinHeight,
-                idealHeight: Tokens.Platform.sheetIdealHeight)
-        #endif
+            .greetSheetSizing()
     }
 
     private var isLastRoute: Bool {
@@ -612,6 +600,24 @@ private extension View {
     func greetPrimarySensoryFeedback(trigger: Int) -> some View {
         #if os(iOS)
             self.sensoryFeedback(.impact, trigger: trigger)
+        #else
+            self
+        #endif
+    }
+
+    /// Gives a Mac sheet window proportions rather than phone ones.
+    ///
+    /// Applied by the overview and by each route destination, because either can be the first
+    /// thing the sheet presents and the window must not resize as the flow moves between them.
+    /// iOS sets no floor — the presentation owns the size there.
+    @ViewBuilder
+    func greetSheetSizing() -> some View {
+        #if os(macOS)
+            self.frame(
+                minWidth: Tokens.Platform.sheetMinWidth,
+                idealWidth: Tokens.Platform.sheetIdealWidth,
+                minHeight: Tokens.Platform.sheetMinHeight,
+                idealHeight: Tokens.Platform.sheetIdealHeight)
         #else
             self
         #endif
