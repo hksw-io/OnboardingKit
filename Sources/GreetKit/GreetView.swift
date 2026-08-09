@@ -163,9 +163,8 @@ public struct GreetView<Content: GreetContent>: View {
             GreetFooterSection(
                 content: self.content,
                 isLoading: self.isLoading,
-                allowsCancelShortcut: GreetKeyboardPolicy.allowsCancelShortcut(
-                    hasSkipButton: self.content.skipButtonText != nil,
-                    allowsInteractiveDismissal: self.allowsInteractiveDismissal),
+                allowsCancelShortcut: self.content.skipButtonText != nil
+                    && self.allowsInteractiveDismissal,
                 onPrimary: self.performPrimaryAction,
                 onSkip: self.onSkip)
                 .frame(maxWidth: Tokens.Layout.contentMaxWidth)
@@ -226,18 +225,6 @@ public struct GreetView<Content: GreetContent>: View {
             set: { newValue in
                 if !newValue { self.errorMessage = nil }
             })
-    }
-}
-
-/// Decides whether Escape may stand in for the skip action.
-///
-/// Escape fires `onSkip`, which is a real caller callback rather than a plain dismissal, so it is
-/// only bound where the skip button is actually on screen and dismissal is allowed. That keeps the
-/// keyboard from triggering something the person cannot see, and keeps blocking setup flows
-/// blocking.
-enum GreetKeyboardPolicy {
-    static func allowsCancelShortcut(hasSkipButton: Bool, allowsInteractiveDismissal: Bool) -> Bool {
-        hasSkipButton && allowsInteractiveDismissal
     }
 }
 
@@ -538,6 +525,12 @@ private struct GreetPrimaryButton: View {
 private struct GreetFooterSection<Content: GreetContent>: View {
     let content: Content
     let isLoading: Bool
+    /// Whether Escape may stand in for the skip action.
+    ///
+    /// Escape fires `onSkip`, which is a real caller callback rather than a plain dismissal, so it
+    /// is only bound where the skip button is actually on screen and dismissal is allowed. That
+    /// keeps the keyboard from triggering something the person cannot see, and keeps blocking setup
+    /// flows blocking.
     let allowsCancelShortcut: Bool
     let onPrimary: () -> Void
     let onSkip: () -> Void
