@@ -86,6 +86,11 @@ struct GreetGradientTones {
     }
 }
 
+/// How far and how fast the animated gradient's colour field drifts.
+///
+/// Motion only: the palette, opacities, and blur are the same at every strength. A motion knob that
+/// also brightened the field meant a caller who wanted a calmer *pace* got a paler *sheet*, and the
+/// two are not the same request — Reduce Motion damps one and Reduce Transparency the other.
 public struct GreetGradientMotion: Equatable, Sendable {
     public var strength: Double
 
@@ -107,18 +112,6 @@ public struct GreetGradientMotion: Equatable, Sendable {
 
     var travelScale: Double {
         self.clampedStrength
-    }
-
-    var baseTintScale: Double {
-        0.84 + (self.clampedStrength * 0.16)
-    }
-
-    var blobOpacityScale: Double {
-        0.78 + (self.clampedStrength * 0.25)
-    }
-
-    var blobBlurScale: Double {
-        max(0.90, 1.08 - (self.clampedStrength * 0.09))
     }
 }
 
@@ -272,7 +265,6 @@ private struct GreetAnimatedGradientBackground: View {
                     motion: self.motion)
                 let tuning = GreetGradientVisualTuning
                     .animated(colorScheme: self.colorScheme)
-                    .scaled(for: self.motion)
                     .damped(for: self.accessibility)
 
                 Canvas(
@@ -430,18 +422,6 @@ struct GreetAnimatedGradientTuning {
     let bottomVeilOpacity: Double
     let blobBlurRatio: CGFloat
 
-    func scaled(for motion: GreetGradientMotion) -> Self {
-        Self(
-            baseTintOpacity: min(0.72, self.baseTintOpacity * motion.baseTintScale),
-            primaryBlobOpacity: min(0.78, self.primaryBlobOpacity * motion.blobOpacityScale),
-            secondaryBlobOpacity: min(0.76, self.secondaryBlobOpacity * motion.blobOpacityScale),
-            accentBlobOpacity: min(0.76, self.accentBlobOpacity * motion.blobOpacityScale),
-            trailingBlobOpacity: min(0.70, self.trailingBlobOpacity * motion.blobOpacityScale),
-            topVeilOpacity: self.topVeilOpacity,
-            bottomVeilOpacity: self.bottomVeilOpacity,
-            blobBlurRatio: self.blobBlurRatio * motion.blobBlurScale)
-    }
-
     func damped(for accessibility: GreetGradientAccessibility) -> Self {
         guard accessibility.prefersFlatBackground else {
             return self
@@ -492,25 +472,25 @@ enum GreetGradientVisualTuning {
     static func animated(colorScheme: ColorScheme) -> GreetAnimatedGradientTuning {
         if colorScheme == .dark {
             return GreetAnimatedGradientTuning(
-                baseTintOpacity: 0.14,
-                primaryBlobOpacity: 0.30,
-                secondaryBlobOpacity: 0.24,
-                accentBlobOpacity: 0.22,
-                trailingBlobOpacity: 0.18,
+                baseTintOpacity: 0.145,
+                primaryBlobOpacity: 0.324,
+                secondaryBlobOpacity: 0.259,
+                accentBlobOpacity: 0.238,
+                trailingBlobOpacity: 0.194,
                 topVeilOpacity: 0.30,
                 bottomVeilOpacity: 0.55,
-                blobBlurRatio: 0.036)
+                blobBlurRatio: 0.035)
         }
 
         return GreetAnimatedGradientTuning(
-            baseTintOpacity: 0.16,
-            primaryBlobOpacity: 0.30,
-            secondaryBlobOpacity: 0.26,
-            accentBlobOpacity: 0.24,
-            trailingBlobOpacity: 0.20,
+            baseTintOpacity: 0.165,
+            primaryBlobOpacity: 0.324,
+            secondaryBlobOpacity: 0.281,
+            accentBlobOpacity: 0.259,
+            trailingBlobOpacity: 0.216,
             topVeilOpacity: 0.20,
             bottomVeilOpacity: 0.38,
-            blobBlurRatio: 0.036)
+            blobBlurRatio: 0.035)
     }
 }
 

@@ -118,6 +118,7 @@ struct GradientTests {
         #expect(GreetGradientMotion(strength: 1.2).clampedStrength == 1.2)
     }
 
+    /// Strength is motion only — it must not reach the palette or the opacities.
     @Test
     func motionPresetsAreOrderedFromSubtleToExpressive() {
         #expect(GreetGradientMotion.subtle.strength < GreetGradientMotion.standard.strength)
@@ -180,13 +181,6 @@ struct GradientTests {
             motion: .expressive)
 
         #expect(self.totalTravel(from: expressiveStart, to: expressiveEnd) > self.totalTravel(from: subtleStart, to: subtleEnd))
-    }
-
-    @Test
-    func expressiveAnimatedGradientMotionHasHigherVisualContrastThanSubtleMotion() {
-        #expect(GreetGradientMotion.expressive.baseTintScale > GreetGradientMotion.subtle.baseTintScale)
-        #expect(GreetGradientMotion.expressive.blobOpacityScale > GreetGradientMotion.subtle.blobOpacityScale)
-        #expect(GreetGradientMotion.expressive.blobBlurScale < GreetGradientMotion.subtle.blobBlurScale)
     }
 
     private func totalTravel(from first: [CGPoint], to second: [CGPoint]) -> Double {
