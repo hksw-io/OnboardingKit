@@ -101,13 +101,7 @@ public struct GreetView<Content: GreetContent>: View {
 
     private var greetContent: some View {
         ZStack {
-            GreetBackgroundView(
-                background: self.background,
-                reduceMotion: self.reduceMotion,
-                reduceTransparency: self.reduceTransparency,
-                colorSchemeContrast: self.colorSchemeContrast,
-                brandColor: self.style.tint,
-                colorScheme: self.colorScheme)
+            GreetBackgroundView(background: self.background, brandColor: self.style.tint)
 
             ZStack {
                 if let activeRoute = self.routeState.activeRoute(in: self.content.primaryRoutes),
@@ -142,12 +136,16 @@ public struct GreetView<Content: GreetContent>: View {
                 GreetHeaderSection(
                     content: self.content,
                     iconSize: self.iconSize)
-                GreetFeatureList(
-                    features: self.content.features,
-                    featureSpacing: self.featureSpacing,
-                    featureIconSize: self.featureIconSize,
-                    featuresVisible: self.featuresVisible,
-                    reduceMotion: self.reduceMotion)
+                VStack(spacing: self.featureSpacing) {
+                    ForEach(Array(self.content.features.enumerated()), id: \.element.id) { index, feature in
+                        GreetFeatureRow(
+                            feature: feature,
+                            index: index,
+                            featureIconSize: self.featureIconSize,
+                            featuresVisible: self.featuresVisible,
+                            reduceMotion: self.reduceMotion)
+                    }
+                }
             }
             // Mac users expect to be able to select and copy this copy out of a window.
             .textSelection(.enabled)
@@ -228,13 +226,21 @@ public struct GreetView<Content: GreetContent>: View {
     }
 }
 
+/// Kept as its own view rather than inlined into `GreetView.body` so an animating background —
+/// `.animatedGradient` drives a `TimelineView` over a `Canvas` — sits behind its own render
+/// boundary instead of being rebuilt whenever the sheet's own state moves.
+///
+/// It reads the accessibility environment itself. `GreetView` reads the same values for the
+/// feature reveal and the route transitions, but forwarding them here as well made six stored
+/// properties out of what is really two inputs.
 private struct GreetBackgroundView: View {
     let background: GreetBackground
-    let reduceMotion: Bool
-    let reduceTransparency: Bool
-    let colorSchemeContrast: ColorSchemeContrast
     let brandColor: Color?
-    let colorScheme: ColorScheme
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         self.background
@@ -328,27 +334,6 @@ private struct GreetHeaderSection<Content: GreetContent>: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-}
-
-private struct GreetFeatureList: View {
-    let features: [GreetFeatureItem]
-    let featureSpacing: CGFloat
-    let featureIconSize: CGFloat
-    let featuresVisible: Bool
-    let reduceMotion: Bool
-
-    var body: some View {
-        VStack(spacing: self.featureSpacing) {
-            ForEach(Array(self.features.enumerated()), id: \.element.id) { index, feature in
-                GreetFeatureRow(
-                    feature: feature,
-                    index: index,
-                    featureIconSize: self.featureIconSize,
-                    featuresVisible: self.featuresVisible,
-                    reduceMotion: self.reduceMotion)
             }
         }
     }
