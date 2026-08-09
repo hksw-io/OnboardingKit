@@ -138,7 +138,6 @@ public struct GreetView<Content: GreetContent>: View {
                 {
                     GreetPrimaryRouteDestinationContainer(
                         content: self.content,
-                        style: self.style,
                         destination: primaryRouteDestination(activeRoute.route),
                         index: activeRoute.index,
                         count: self.content.primaryRoutes.count,
@@ -170,15 +169,13 @@ public struct GreetView<Content: GreetContent>: View {
             VStack(spacing: self.contentSpacing) {
                 GreetHeaderSection(
                     content: self.content,
-                    iconSize: self.iconSize,
-                    style: self.style)
+                    iconSize: self.iconSize)
                 GreetFeatureList(
                     features: self.content.features,
                     featureSpacing: self.featureSpacing,
                     featureIconSize: self.featureIconSize,
                     featuresVisible: self.featuresVisible,
-                    reduceMotion: self.reduceMotion,
-                    style: self.style)
+                    reduceMotion: self.reduceMotion)
             }
             // Mac users expect to be able to select and copy this copy out of a window.
             .textSelection(.enabled)
@@ -194,7 +191,6 @@ public struct GreetView<Content: GreetContent>: View {
             GreetFooterSection(
                 content: self.content,
                 isLoading: self.isLoading,
-                style: self.style,
                 allowsCancelShortcut: GreetKeyboardPolicy.allowsCancelShortcut(
                     hasSkipButton: self.content.skipButtonText != nil,
                     allowsInteractiveDismissal: self.allowsInteractiveDismissal),
@@ -325,7 +321,6 @@ private struct GreetPrimaryDestinationContainer<Destination: View>: View {
 
 private struct GreetPrimaryRouteDestinationContainer<Content: GreetContent, Destination: View>: View {
     let content: Content
-    let style: GreetStyle
     let destination: Destination
     let index: Int
     let count: Int
@@ -340,7 +335,6 @@ private struct GreetPrimaryRouteDestinationContainer<Content: GreetContent, Dest
             .safeAreaBar(edge: .bottom) {
                 GreetPrimaryButton(
                     label: self.primaryButtonText,
-                    style: self.style,
                     action: {
                         self.isLastRoute ? self.onDone() : self.onNext()
                     })
@@ -372,7 +366,6 @@ private struct GreetPrimaryRouteDestinationContainer<Content: GreetContent, Dest
 private struct GreetHeaderSection<Content: GreetContent>: View {
     let content: Content
     let iconSize: CGFloat
-    let style: GreetStyle
 
     var body: some View {
         VStack(spacing: Tokens.Spacing.large) {
@@ -396,7 +389,6 @@ private struct GreetHeaderSection<Content: GreetContent>: View {
                 .font(.largeTitle)
             #endif
                 .fontWeight(.bold)
-                .greetOptionalForegroundStyle(self.style.titleColor)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
@@ -404,7 +396,7 @@ private struct GreetHeaderSection<Content: GreetContent>: View {
             if let subtitle = self.content.subtitle {
                 subtitle
                     .font(.body)
-                    .foregroundStyle(self.style.subtitleForegroundStyle)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -418,7 +410,6 @@ private struct GreetFeatureList: View {
     let featureIconSize: CGFloat
     let featuresVisible: Bool
     let reduceMotion: Bool
-    let style: GreetStyle
 
     var body: some View {
         VStack(spacing: self.featureSpacing) {
@@ -428,8 +419,7 @@ private struct GreetFeatureList: View {
                     index: index,
                     featureIconSize: self.featureIconSize,
                     featuresVisible: self.featuresVisible,
-                    reduceMotion: self.reduceMotion,
-                    style: self.style)
+                    reduceMotion: self.reduceMotion)
             }
         }
     }
@@ -441,7 +431,6 @@ private struct GreetFeatureRow: View {
     let featureIconSize: CGFloat
     let featuresVisible: Bool
     let reduceMotion: Bool
-    let style: GreetStyle
 
     var body: some View {
         let delay = Tokens.Motion.revealDelay(for: self.index)
@@ -454,7 +443,7 @@ private struct GreetFeatureRow: View {
                     .scaledToFit()
                     .symbolRenderingMode(.hierarchical)
                     .frame(width: self.featureIconSize, height: self.featureIconSize)
-                    .foregroundStyle(self.style.featureIconForegroundStyle)
+                    .foregroundStyle(.tint)
                     .accessibilityHidden(true)
             }
 
@@ -462,13 +451,12 @@ private struct GreetFeatureRow: View {
                 if let label = self.feature.label {
                     label
                         .font(.headline)
-                        .greetOptionalForegroundStyle(self.style.featureTitleColor)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityAddTraits(.isHeader)
                 }
                 self.feature.description
                     .font(.subheadline)
-                    .foregroundStyle(self.style.featureDescriptionForegroundStyle)
+                    .foregroundStyle(.secondary)
                     .lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -525,7 +513,6 @@ private struct GreetPrimaryButton: View {
     }
 
     let label: Text
-    let style: GreetStyle
     var loading: Loading?
     let action: () -> Void
 
@@ -603,14 +590,12 @@ private struct GreetPrimaryButton: View {
             .font(.body.weight(.semibold))
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
-            .greetOptionalForegroundStyle(self.style.primaryButtonForegroundColor)
     }
 }
 
 private struct GreetFooterSection<Content: GreetContent>: View {
     let content: Content
     let isLoading: Bool
-    let style: GreetStyle
     let allowsCancelShortcut: Bool
     let onPrimary: () -> Void
     let onSkip: () -> Void
@@ -619,7 +604,6 @@ private struct GreetFooterSection<Content: GreetContent>: View {
         VStack(spacing: Tokens.Layout.footerControlSpacing) {
             GreetPrimaryButton(
                 label: self.content.primaryButtonText,
-                style: self.style,
                 loading: GreetPrimaryButton.Loading(
                     isLoading: self.isLoading,
                     accessibilityValue: self.content.primaryButtonLoadingAccessibilityValue),
@@ -640,7 +624,7 @@ private struct GreetFooterSection<Content: GreetContent>: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(self.style.secondaryButtonForegroundStyle)
+                .foregroundStyle(.secondary)
                 .greetLinkPointer()
                 .greetCancelShortcut(self.allowsCancelShortcut)
                 .disabled(self.isLoading)
@@ -703,15 +687,6 @@ private extension View {
     func greetTint(_ color: Color?) -> some View {
         if let color {
             self.tint(color)
-        } else {
-            self
-        }
-    }
-
-    @ViewBuilder
-    func greetOptionalForegroundStyle(_ color: Color?) -> some View {
-        if let color {
-            self.foregroundStyle(color)
         } else {
             self
         }

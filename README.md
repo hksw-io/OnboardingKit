@@ -183,7 +183,7 @@ GreetKit pins the footer with `safeAreaBar(edge:)` and hands the fade over overf
 
 ## Styling
 
-Use `greetStyle(_:)` to override foreground, tint, and button colors while keeping the library's layout, typography, and motion:
+Use `greetStyle(_:)` to set the brand color while keeping the library's layout, typography, and motion:
 
 ```swift
 GreetView(
@@ -193,17 +193,12 @@ GreetView(
     onPrimary: {},
     onSkip: {})
     .greetBackground(.softGradient)
-    .greetStyle(GreetStyle(
-        tint: .indigo,
-        titleColor: .primary,
-        featureIconColor: .mint,
-        primaryButtonForegroundColor: .white,
-        secondaryButtonColor: .secondary))
+    .greetStyle(GreetStyle(tint: .indigo))
 ```
 
-`GreetBackground` controls the surface behind the sheet content. `GreetStyle` controls foreground roles such as title, subtitle, feature rows, primary button text, and secondary button text. Any color you leave as `nil` uses the standard system treatment.
+`GreetBackground` controls the surface behind the sheet content. `GreetStyle` carries the brand color: the view applies it with `.tint`, so the prominent glass button and the feature icons take it from the environment, and the built-in gradients derive their palette from it. Leave it `nil` for the system accent.
 
-The primary button is the system prominent glass button, so `tint` colors it and the platform supplies the pressed, hovered, focused, disabled, and high-contrast treatments. `primaryButtonForegroundColor` overrides the label color when an app needs one; leave it `nil` to let the system pick a legible color for your tint.
+Text roles are deliberately not overridable. Title, subtitle, feature rows, and the skip button use the system label hierarchy, and the primary button is the system prominent glass button — so the platform supplies the pressed, hovered, focused, disabled, and Increase Contrast treatments, and picks a label color legible against your tint. If an app needs a fully bespoke surface, use `.custom { context in ... }` for the background and style the destination views it owns.
 
 ## State ownership
 
