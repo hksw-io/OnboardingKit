@@ -126,7 +126,6 @@ public struct GreetBackground {
     enum Storage {
         case system
         case softGradient(brand: Color?)
-        case linearGradient(colors: [Color], startPoint: UnitPoint, endPoint: UnitPoint)
         case animatedGradient(brand: Color?, motion: GreetGradientMotion)
         case custom((GreetBackgroundContext) -> AnyView)
     }
@@ -140,14 +139,6 @@ public struct GreetBackground {
 
     public static func softGradient(brand: Color? = nil) -> Self {
         Self(storage: .softGradient(brand: brand))
-    }
-
-    public static func linearGradient(
-        colors: [Color],
-        startPoint: UnitPoint = .topLeading,
-        endPoint: UnitPoint = .bottomTrailing) -> Self
-    {
-        Self(storage: .linearGradient(colors: colors, startPoint: startPoint, endPoint: endPoint))
     }
 
     public static func animatedGradient(
@@ -180,11 +171,6 @@ extension GreetBackground {
                 tones: context.tones(brand: brand),
                 colorScheme: context.colorScheme,
                 accessibility: context.gradientAccessibility))
-        case let .linearGradient(colors, startPoint, endPoint):
-            AnyView(GreetLinearGradientBackground(
-                colors: colors,
-                startPoint: startPoint,
-                endPoint: endPoint))
         case let .animatedGradient(brand, motion):
             AnyView(GreetAnimatedGradientBackground(
                 tones: context.tones(brand: brand),
@@ -238,19 +224,6 @@ private struct GreetSoftGradientBackground: View {
                 startPoint: .top,
                 endPoint: .bottom)
         }
-    }
-}
-
-private struct GreetLinearGradientBackground: View {
-    let colors: [Color]
-    let startPoint: UnitPoint
-    let endPoint: UnitPoint
-
-    var body: some View {
-        LinearGradient(
-            colors: GradientColorNormalizer.colors(self.colors),
-            startPoint: self.startPoint,
-            endPoint: self.endPoint)
     }
 }
 
@@ -563,19 +536,6 @@ enum GreetAnimatedGradientMotion {
 
     private static func point(_ x: Double, _ y: Double) -> CGPoint {
         CGPoint(x: min(1, max(0, x)), y: min(1, max(0, y)))
-    }
-}
-
-enum GradientColorNormalizer {
-    static func colors(_ colors: [Color]) -> [Color] {
-        switch colors.count {
-        case 0:
-            [Tokens.background, Tokens.background]
-        case 1:
-            [colors[0], colors[0]]
-        default:
-            colors
-        }
     }
 }
 #endif

@@ -133,9 +133,17 @@ Built-in options:
 
 - `.system` — the default. Draws nothing, so the presentation's own surface shows through: a sheet keeps the material the platform gives it.
 - `.softGradient` / `.softGradient(brand:)` — a restrained brand-derived background tuned for readable first-run content.
-- `.linearGradient(colors:startPoint:endPoint:)` — app-provided colors with the library-managed footer treatment.
 - `.animatedGradient(brand:motion:)` — an opt-in smooth full-surface animated gradient. It uses the style tint by default, adapts its tones for light and dark mode, and automatically becomes static when Reduce Motion is enabled.
-- `.custom { context in ... }` — a fully custom SwiftUI background. Use `context.reduceMotion`, `context.reduceTransparency`, `context.colorSchemeContrast`, `context.brandColor`, and `context.colorScheme` to keep custom backgrounds consistent and accessible.
+- `.custom { context in ... }` — a fully custom SwiftUI background, including a plain `LinearGradient` of your own colors. Use `context.reduceMotion`, `context.reduceTransparency`, `context.colorSchemeContrast`, `context.brandColor`, and `context.colorScheme` to keep custom backgrounds consistent and accessible.
+
+```swift
+.greetBackground(.custom { _ in
+    LinearGradient(
+        colors: [.blue.opacity(0.18), .mint.opacity(0.12), .clear],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing)
+})
+```
 
 Destination views can still draw their own backgrounds. If they do, that local destination background appears above the GreetKit background.
 

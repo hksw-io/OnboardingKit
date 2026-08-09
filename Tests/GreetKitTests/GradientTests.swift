@@ -112,29 +112,6 @@ struct GradientTests {
     }
 
     @Test
-    func gradientColorNormalizerPadsEmptyInput() {
-        let colors = GradientColorNormalizer.colors([])
-
-        #expect(colors.count == 2)
-        #expect(colors[0] == Tokens.background)
-        #expect(colors[1] == Tokens.background)
-    }
-
-    @Test
-    func gradientColorNormalizerDuplicatesASingleColor() {
-        let colors = GradientColorNormalizer.colors([.teal])
-
-        #expect(colors == [.teal, .teal])
-    }
-
-    @Test
-    func gradientColorNormalizerPassesThroughTwoOrMoreColors() {
-        let input: [Color] = [.red, .green, .blue]
-
-        #expect(GradientColorNormalizer.colors(input) == input)
-    }
-
-    @Test
     func motionStrengthClampsToTheSupportedRange() {
         #expect(GreetGradientMotion(strength: -1).clampedStrength == 0)
         #expect(GreetGradientMotion(strength: 5).clampedStrength == 2)
